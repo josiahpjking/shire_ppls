@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1537703896623.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D6B2B6D0",
+    "lastKnownWriteTime" : 1537699418,
+    "last_content_update" : 1537703896623,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "FB8B3C90",
+        "caption" : "grouplists",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=grouplists&cache_key=FB8B3C90",
+        "displayedObservations" : 80,
+        "environment" : "",
+        "object" : "grouplists",
+        "preview" : 0,
+        "totalObservations" : 80,
+        "variables" : 3
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

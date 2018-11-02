@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1540220327204.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1179083616",
+    "id" : "4A853411",
+    "lastKnownWriteTime" : 1541155655,
+    "last_content_update" : 1541155655581,
+    "path" : "~/Desktop/mousetrack/mousetrack_analysis_script.R",
+    "project_path" : "mousetrack_analysis_script.R",
+    "properties" : {
+        "cursorPosition" : "9,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

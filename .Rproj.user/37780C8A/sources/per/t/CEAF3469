@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1537702439482.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3128831752",
+    "id" : "CEAF3469",
+    "lastKnownWriteTime" : 1537705605,
+    "last_content_update" : 1537705605871,
+    "path" : "~/Desktop/mousetrack/printingjsonlists.R",
+    "project_path" : "printingjsonlists.R",
+    "properties" : {
+        "cursorPosition" : "37,30",
+        "scrollLine" : "33",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

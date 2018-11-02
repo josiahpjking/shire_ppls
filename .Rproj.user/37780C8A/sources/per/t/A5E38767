@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1537694593089.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "787554567",
+    "id" : "A5E38767",
+    "lastKnownWriteTime" : 1537694653,
+    "last_content_update" : 1537694653724,
+    "path" : "~/Desktop/mousetrack/testing4lists.R",
+    "project_path" : "testing4lists.R",
+    "properties" : {
+        "cursorPosition" : "81,19",
+        "scrollLine" : "68"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

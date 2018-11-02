@@ -1,0 +1,85 @@
+require(tidyverse)
+all_images = list.files("images")
+dist_images = all_images[grepl("^d",all_images)]
+targ_images = all_images[grepl("^t",all_images)]
+fill_targ_images = all_images[grepl("^fr",all_images)]
+
+all_audio = list.files("audio")
+crit_audio = all_audio[grepl("^e_",all_audio)]
+fill_audio = all_audio[grepl("^f_",all_audio)]
+
+critical_items = gsub("t_|.png","",targ_images)
+filler_items = gsub("fr_|.png","",fill_targ_images)
+
+conditions = c("FluentL","FluentR","DisfluentL","DisfluentR")
+layers = c("image-left","image-right","audio-1","audio-2")
+expand.grid(conditions,layers,critical_items) %>% 
+  rename(Condition = Var1,
+         Layer = Var2,
+         Trial = Var3) %>% arrange(Trial,Condition) -> crit_list
+
+crit_list %>% mutate(
+  Value = ifelse(grepl("L",Condition) & Layer=="image-left",paste0("t_",Trial,".png"),
+                 ifelse(grepl("R",Condition) & Layer=="image-right",paste0("t_",Trial,".png"),
+                        ifelse(grepl("Fluent",Condition) & Layer=="audio-1",paste0("e_",Trial,"_f1.wav"),
+                               ifelse(grepl("Disfluent",Condition) & Layer=="audio-1",paste0("e_",Trial,"_d1.wav"),
+                                      ifelse(grepl("Fluent",Condition) & Layer=="audio-2",paste0("e_",Trial,"_f2.wav"),
+                                             ifelse(grepl("Disfluent",Condition) & Layer=="audio-2",paste0("e_",Trial,"_d2.wav"),NA
+                                             ))))))
+) -> crit_list
+
+
+filler_items = gsub("fr_|.png","",fill_targ_images)
+
+expand.grid(filler_items,layers) %>% 
+  rename(Trial = Var1,
+         Layer = Var2) %>% arrange(Trial) -> filler_list
+
+filler_list %>% mutate(
+  refpos = rep(sample(rep(c("L","R"),each=20)),each=4),
+  Value = ifelse(Layer=="audio-1",paste0("f_",Trial,"_1.wav"),
+                 ifelse(Layer=="audio-2",paste0("f_",Trial,"_2.wav"),
+                        ifelse(Layer=="image-left" & refpos=="L",paste0("fr_",Trial,".png"),
+                               ifelse(Layer=="image-right" & refpos=="R",paste0("fr_",Trial,".png"),
+                                      NA))))
+) %>% select(-refpos) -> filler_list
+
+filler_list %>% mutate(
+  Condition = "FluentL"
+) %>% bind_rows(.,
+                filler_list %>% mutate(
+                  Condition = "FluentR"
+                )
+) %>% bind_rows(.,
+                filler_list %>% mutate(
+                  Condition = "DisfluentR"
+                )
+) %>% bind_rows(.,
+                filler_list %>% mutate(
+                  Condition = "DisfluentL"
+                )
+) -> filler_list
+
+
+
+distractors = data.frame(
+  Trial = c(critical_items,filler_items),
+  distim = sample(dist_images) 
+)
+
+left_join(crit_list, distractors) %>% mutate(
+  Value = ifelse(is.na(Value),as.character(distim),Value)
+) %>% select(-distim) -> crit_list
+
+left_join(filler_list, distractors) %>% mutate(
+  Value = ifelse(is.na(Value),as.character(distim),Value)
+) %>% select(-distim) -> filler_list
+
+
+bind_rows(crit_list, filler_list) %>% select(Trial, Condition, Layer, Value) -> alltrials
+alltrials[sample(1:nrow(alltrials)),]
+
+write.csv(alltrials[sample(1:nrow(alltrials)),],"trials1.csv",row.names = FALSE)
+
+(512*0.3)-(150/2)
+(512*1.7)-(150/2)
