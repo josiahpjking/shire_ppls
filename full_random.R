@@ -1,5 +1,5 @@
 require(tidyverse)
-all_images = list.files("images")
+all_images = list.files("~/Desktop/mousetrack_achive/images")
 dist_images = all_images[grepl("^d",all_images)]
 targ_images = all_images[grepl("^t",all_images)]
 fill_targ_images = all_images[grepl("^fr",all_images)]
@@ -100,6 +100,10 @@ printTrials=function(fulldata){
 \t\t\t\t\t\t{
 \t\t\t\t\t\t\t"layer": "audio",
 \t\t\t\t\t\t\t"value": "',trialsdata$Value[trialsdata$Condition==m & trialsdata$Layer=="audio"],'"
+\t\t\t\t\t\t},
+\t\t\t\t\t\t{
+\t\t\t\t\t\t\t"layer": "text",
+\t\t\t\t\t\t\t"value": " "
 \t\t\t\t\t\t}
 \t\t\t\t\t]
 \t\t\t\t},'))
@@ -118,13 +122,27 @@ printTrials(ppt_conditions_layers)
 cat(paste0('\n\t],'))
 sink()
 
+### add the attention checks to conditions manually (only 4)
+attentiontrials<-data.frame(
+  Trial=c("att1","att2","att3","att4"),
+  Condition=rep("attention",4)
+)
+#add these.
+sink("output_att_trials.txt")
+cat(paste0('\t"trials": [\n'))
+printTrials(attentiontrials)
+cat(paste0('\n\t],'))
+sink()
+
 
 
 printList=function(trials,listname){
   prefix=paste0('		{\n\t\t\t"name": "',listname,'",\n\t\t\t"trials": [\n')
-  lists = trials[sample(1:nrow(trials)),] %>%
+  trials2 = bind_rows(trials,attentiontrials)
+  lists = trials2[sample(1:nrow(trials2)),] %>%
     mutate(
-      cc = paste0('				"',Trial,':',listname,Condition,'",\n')
+      cc = paste0('				"',Trial,':',listname,Condition,'",\n'),
+      cc = ifelse(grepl("attention",Condition),gsub(listname,"",cc),cc)
     ) %>% pull(cc)
   suffix = '\t\t\t]\n\t\t},\n'
   cat(prefix)

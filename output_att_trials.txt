@@ -1,0 +1,111 @@
+	"trials": [
+		{
+			"name": "att1",
+			"conditions": [
+				
+				{
+					"name": "attention",
+					"variables": [
+						{
+							"layer": "image-left",
+							"value": "banana.jpg"
+						},
+						{
+							"layer": "image-right",
+							"value": "cat.jpg"
+						},
+						{
+							"layer": "audio",
+							"value": "f_anchor_.wav"
+						},
+						{
+							"layer": "text",
+							"value": "This is a test trial"
+						}
+					]
+				},
+			]
+		},
+		{
+			"name": "att2",
+			"conditions": [
+				
+				{
+					"name": "attention",
+					"variables": [
+						{
+							"layer": "image-left",
+							"value": "car.jpg"
+						},
+						{
+							"layer": "image-right",
+							"value": "cheese.jpg"
+						},
+						{
+							"layer": "audio",
+							"value": "f_anchor_.wav"
+						},
+						{
+							"layer": "text",
+							"value": "This is a test trial"
+						}
+					]
+				},
+			]
+		},
+		{
+			"name": "att3",
+			"conditions": [
+				
+				{
+					"name": "attention",
+					"variables": [
+						{
+							"layer": "image-left",
+							"value": "mouse.jpg"
+						},
+						{
+							"layer": "image-right",
+							"value": "stapler.jpg"
+						},
+						{
+							"layer": "audio",
+							"value": "f_anchor_.wav"
+						},
+						{
+							"layer": "text",
+							"value": "This is a test trial"
+						}
+					]
+				},
+			]
+		},
+		{
+			"name": "att4",
+			"conditions": [
+				
+				{
+					"name": "attention",
+					"variables": [
+						{
+							"layer": "image-left",
+							"value": "glass.jpg"
+						},
+						{
+							"layer": "image-right",
+							"value": "plant.jpg"
+						},
+						{
+							"layer": "audio",
+							"value": "f_anchor_.wav"
+						},
+						{
+							"layer": "text",
+							"value": "This is a test trial"
+						}
+					]
+				},
+			]
+		},
+
+	],
