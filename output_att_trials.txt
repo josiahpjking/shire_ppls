@@ -8,19 +8,15 @@
 					"variables": [
 						{
 							"layer": "image-left",
-							"value": "banana.jpg"
+							"value": ""
 						},
 						{
 							"layer": "image-right",
-							"value": "cat.jpg"
+							"value": ""
 						},
 						{
 							"layer": "audio",
-							"value": "f_anchor_.wav"
-						},
-						{
-							"layer": "text",
-							"value": "This is a test trial"
+							"value": ""
 						}
 					]
 				},
@@ -35,19 +31,15 @@
 					"variables": [
 						{
 							"layer": "image-left",
-							"value": "car.jpg"
+							"value": ""
 						},
 						{
 							"layer": "image-right",
-							"value": "cheese.jpg"
+							"value": ""
 						},
 						{
 							"layer": "audio",
-							"value": "f_anchor_.wav"
-						},
-						{
-							"layer": "text",
-							"value": "This is a test trial"
+							"value": ""
 						}
 					]
 				},
@@ -62,19 +54,15 @@
 					"variables": [
 						{
 							"layer": "image-left",
-							"value": "mouse.jpg"
+							"value": ""
 						},
 						{
 							"layer": "image-right",
-							"value": "stapler.jpg"
+							"value": ""
 						},
 						{
 							"layer": "audio",
-							"value": "f_anchor_.wav"
-						},
-						{
-							"layer": "text",
-							"value": "This is a test trial"
+							"value": ""
 						}
 					]
 				},
@@ -89,19 +77,15 @@
 					"variables": [
 						{
 							"layer": "image-left",
-							"value": "glass.jpg"
+							"value": ""
 						},
 						{
 							"layer": "image-right",
-							"value": "plant.jpg"
+							"value": ""
 						},
 						{
 							"layer": "audio",
-							"value": "f_anchor_.wav"
-						},
-						{
-							"layer": "text",
-							"value": "This is a test trial"
+							"value": ""
 						}
 					]
 				},

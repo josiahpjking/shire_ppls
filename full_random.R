@@ -35,7 +35,7 @@ everything %>% filter(group==3) %>% select(-group) -> group3
 everything %>% filter(group==4) %>% select(-group) -> group4
 
 
-nParticipants = 32 
+nParticipants = 48 
 nConditions = 4
 
 
@@ -100,10 +100,6 @@ printTrials=function(fulldata){
 \t\t\t\t\t\t{
 \t\t\t\t\t\t\t"layer": "audio",
 \t\t\t\t\t\t\t"value": "',trialsdata$Value[trialsdata$Condition==m & trialsdata$Layer=="audio"],'"
-\t\t\t\t\t\t},
-\t\t\t\t\t\t{
-\t\t\t\t\t\t\t"layer": "text",
-\t\t\t\t\t\t\t"value": " "
 \t\t\t\t\t\t}
 \t\t\t\t\t]
 \t\t\t\t},'))
