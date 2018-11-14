@@ -10,7 +10,8 @@ mround<-function (x, base) {base * round(x/base)}
 #1024 * 700
 
 #read in the mousetracking data
-tdat<-read_csv("1037-v1-trials (2).csv") %>% 
+rawdata <- read_csv("1037-v1-trials (2).csv")
+tdat <- rawdata %>% 
   mutate(
     X=512-X,
     Y=350-Y,
@@ -18,6 +19,24 @@ tdat<-read_csv("1037-v1-trials (2).csv") %>%
     refpos=substring(Condition,nchar(Condition)),
     Condition=substring(Condition,4,nchar(Condition)-1)
   ) %>% print()
+
+#attention checks
+rawdata %>% filter(Condition=="attention") %>% 
+  group_by(Participant, Trial) %>% 
+  summarise(
+    clickedLR = last(Layer[`Event Type`=="click"]),
+    clicked_pos = factor(ifelse(!(grepl("left|right",clickedLR)),"none",
+                            ifelse(grepl("left",clickedLR) & refpos=="L","ref",
+                                   ifelse(grepl("right",clickedLR) & refpos=="R","ref","dis")))),
+    correct_pos = ifelse(grepl("atta",`image-left`),"L","R"),
+    clicked = ifelse(clicked_pos==correct_pos, 1, 0)
+  ) %>% group_by(Participant) %>%
+  summarise(
+    att_check = sum(clicked)/n()
+  ) %>% select(Participant, att_check) %>% print() -> ppt_att_check
+#remove any who clicked on the non animal in any attention check trials
+left_join(tdat, ppt_att_check) %>% filter(att_check==1) -> tdat
+
 
 
 ########
