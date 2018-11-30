@@ -7,17 +7,17 @@ source("functions/tcplot.R")
 source("functions/tcplot_nolines.R")
 mround<-function (x, base) {base * round(x/base)}
 #1024 * 700
+# group names = X_n where X is condition (fluency * ref pos) and n is sample size/4
+
 
 #read in the mousetracking data
-rawdata <- read_csv("~/Downloads/test (1).csv")
-tdat <- rawdata %>% 
-  mutate(
-    X=X-512,
-    Y=Y-350,
-    item=Trial,
-    refpos=substring(Condition,nchar(Condition)),
-    Condition=substring(Condition,4,nchar(Condition)-1)
-  ) %>% print()
+rawdata <- read.csv("~/Downloads/1052-v1-trials (2).csv")
+
+#did participants do all the trials?
+rawdata %>% group_by(Participant) %>%
+  summarise(n_distinct(Trial))
+
+
 
 #attention checks
 rawdata %>%  filter(Condition=="attention") %>% 
@@ -35,9 +35,19 @@ rawdata %>%  filter(Condition=="attention") %>%
   summarise(
     att_check = sum(clicked)/n()
   ) %>% select(Participant, att_check) %>% print() -> ppt_att_check
+
+
+#tidy data, then..
+tdat <- rawdata %>% 
+  mutate(
+    X=X-512,
+    Y=Y-350,
+    item=Trial,
+    refpos=substring(Condition,nchar(Condition)),
+    Condition=substring(Condition,4,nchar(Condition)-1)
+  ) %>% print()
 #remove any who clicked on the non animal in any attention check trials
 left_join(tdat, ppt_att_check) %>% filter(att_check==1) -> tdat
-
 
 
 ########
@@ -52,8 +62,10 @@ tdat %>%
 
 #are there any participants who did it repeatedly?
 invalid_trials %>% select(Participant,valid) %>% table() -> invalid_ppts
+print(invalid_ppts)
+bad_pps<-c(3,4,7)
 #remove invalid trials
-left_join(tdat, invalid_trials) %>% filter(valid==1) -> tdat
+left_join(tdat, invalid_trials) %>% filter(valid==1, !(Participant%in%bad_pps)) -> tdat
 
 
 ########
@@ -63,7 +75,7 @@ left_join(tdat, invalid_trials) %>% filter(valid==1) -> tdat
 tdat %>% 
   group_by(Participant, Trial) %>%
   summarise(
-    audio1_start = Elapsed[`Event Type`=="playbackstart"]
+    audio1_start = first(Elapsed[`Event Type`=="playbackstart"])
   ) %>%
   left_join(tdat, .) %>% print() -> tdat
 
@@ -118,7 +130,7 @@ tdat %>%
                        ifelse(grepl("left",clickedLR) & refpos=="L","ref",
                               ifelse(grepl("right",clickedLR) & refpos=="R","ref","dis"))))
   ) -> object_clicks
-
+#object_clicks %>% ungroup() %>% select(clicked,fluency) %>% table()
 left_join(tdat, object_clicks) %>% filter(rt>=200, clicked!="none") -> tdat
 
 
@@ -203,7 +215,7 @@ tdat_binned %>%
     group=factor("1")
   ) %>% as.data.frame() %>%
   make_tcplot_data(.,AOIs=c("refprop","disprop"),predictor = "Condition") %>%
-  tcplot_nolines(.,0,1000)+facet_wrap(~Condition)
+  tcplot_nolines(.,0,2000)+facet_wrap(~Condition)
 
 #require(gganimate)
 #tdat %>% filter(Participant==2, Trial=="kangaroo", !is.na(X), !is.na(Y)) %>%
