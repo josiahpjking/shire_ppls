@@ -2,34 +2,35 @@ require(tidyverse)
 require(magrittr)
 require(conflicted)
 conflict_prefer("filter","dplyr")
-
-source("make_tcplot_data.R")
-source("tcplot.R")
-source("tcplot_nolines.R")
+source("functions/make_tcplot_data.R")
+source("functions/tcplot.R")
+source("functions/tcplot_nolines.R")
 mround<-function (x, base) {base * round(x/base)}
 #1024 * 700
 
 #read in the mousetracking data
-rawdata <- read_csv("1037-v1-trials (2).csv")
+rawdata <- read_csv("~/Downloads/test (1).csv")
 tdat <- rawdata %>% 
   mutate(
-    X=512-X,
-    Y=350-Y,
+    X=X-512,
+    Y=Y-350,
     item=Trial,
     refpos=substring(Condition,nchar(Condition)),
     Condition=substring(Condition,4,nchar(Condition)-1)
   ) %>% print()
 
 #attention checks
-rawdata %>% filter(Condition=="attention") %>% 
+rawdata %>%  filter(Condition=="attention") %>% 
+  mutate(
+    refpos = ifelse(grepl("atta",`image-right`),"R","L")
+  ) %>%
   group_by(Participant, Trial) %>% 
   summarise(
     clickedLR = last(Layer[`Event Type`=="click"]),
     clicked_pos = factor(ifelse(!(grepl("left|right",clickedLR)),"none",
-                            ifelse(grepl("left",clickedLR) & refpos=="L","ref",
-                                   ifelse(grepl("right",clickedLR) & refpos=="R","ref","dis")))),
-    correct_pos = ifelse(grepl("atta",`image-left`),"L","R"),
-    clicked = ifelse(clicked_pos==correct_pos, 1, 0)
+                            ifelse(grepl("left",clickedLR),"L",
+                                   ifelse(grepl("right",clickedLR),"R")))),
+    clicked = ifelse(clicked_pos==first(refpos), 1, 0)
   ) %>% group_by(Participant) %>%
   summarise(
     att_check = sum(clicked)/n()
@@ -85,7 +86,7 @@ left_join(tdat, audio) %>%
   ) -> tdat
 
 ####FILTER TO CRITICAL TRIALS
-tdat %<>% filter(Condition!="Filler")
+tdat %<>% filter(Condition!="Filler",Condition!="entio")
 
 ########
 #MOVEMENTS BEYOND OUTER EDGE
@@ -100,8 +101,8 @@ tdat %<>% mutate(
 ) 
 #how many samples?
 tdat %>% filter(`Event Category`=="mouse", time >= 0) %>% select(outside) %>% table() %>% prop.table()
-#get rid of them.
-tdat %<>% filter(outside==0, `Event Category`=="mouse")
+#get rid of them.?????
+tdat %<>% filter(outside==0, `Event Category`=="mouse")   # this removes all outside movements which occur before ref onset too...
 
 ########
 #CHECK OBJ CLICKED
