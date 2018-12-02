@@ -11,12 +11,18 @@ mround<-function (x, base) {base * round(x/base)}
 
 
 #read in the mousetracking data
-rawdata <- read.csv("~/Downloads/1052-v1-trials (2).csv")
+rawdata <- read_csv("~/Downloads/1052-v1-trials.csv")
 
-#did participants do all the trials?
-rawdata %>% group_by(Participant) %>%
-  summarise(n_distinct(Trial))
 
+rawdata %>% group_by(Participant, Trial) %>% 
+  summarise(trialstart = first(`Trial Start`),
+            count = n()) ->dd
+head(dd)
+require(lubridate)
+
+dd$trialstart[1]
+
+Jan 01 1970.
 
 
 #attention checks
