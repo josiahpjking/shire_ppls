@@ -11,18 +11,45 @@ mround<-function (x, base) {base * round(x/base)}
 
 
 #read in the mousetracking data
-rawdata <- read_csv("~/Downloads/1052-v1-trials.csv")
-
+rawdata <- read_csv("~/Downloads/1052-v2-trials (1).csv")
 
 rawdata %>% group_by(Participant, Trial) %>% 
-  summarise(trialstart = first(`Trial Start`),
-            count = n()) ->dd
-head(dd)
+  summarise(
+    trialstart = first(`Trial Start`),
+    trialstart1 = as.POSIXct(as.integer(as.numeric(as.character(trialstart)) / 1000.0), origin='1970-01-01', tz="GMT"),
+    trialelapse = max(Elapsed),
+    condition = first(Condition),
+    n=n(),
+    datapoints = sum(`Event Type`=="move")) ->dd
+dd
+dd %>% group_by(Participant) %>%
+  summarise(
+    totaltrials = n(),
+    sum((n-datapoints)<=1),
+    emptytrials = sum(datapoints==0),
+    fails = ifelse(emptytrials>0,"fail","success")
+  ) %>% print () -> fails
+
+dd %>% filter(datapoints!=0) %>%
+  group_by(Participant) %>%
+  summarise(
+    first=min(trialstart),
+    first1=as.POSIXct(as.integer(as.numeric(as.character(first)) / 1000.0), origin='1970-01-01', tz="GMT"),
+    last=max(trialstart),
+    last1=as.POSIXct(as.integer(as.numeric(as.character(last)) / 1000.0), origin='1970-01-01', tz="GMT")
+  ) %>% left_join(.,fails) %>%
+  mutate(
+    day = lubridate::day(last1)) -> plotdat
+
+
+ggplot(plotdat, aes(y=factor(Participant),col=fails))+
+  geom_point(aes(x=first1,group=Participant))+
+  geom_point(aes(x=last1,group=Participant))+
+  ggtitle("start and end points for each participant (valid trials only).\nnotice last participant failed but clearly was not overlapping with others\nso can rule out it being issues due to ppts recording data simultaneously\n(which was the previous problem as far as i could tell)")+facet_wrap(~day,scales="free_x")
+
+
 require(lubridate)
 
-dd$trialstart[1]
-
-Jan 01 1970.
 
 
 #attention checks
@@ -69,9 +96,8 @@ tdat %>%
 #are there any participants who did it repeatedly?
 invalid_trials %>% select(Participant,valid) %>% table() -> invalid_ppts
 print(invalid_ppts)
-bad_pps<-c(3,4,7)
 #remove invalid trials
-left_join(tdat, invalid_trials) %>% filter(valid==1, !(Participant%in%bad_pps)) -> tdat
+left_join(tdat, invalid_trials) %>% filter(valid==1) -> tdat
 
 
 ########
@@ -120,8 +146,7 @@ tdat %<>% mutate(
 #how many samples?
 tdat %>% filter(`Event Category`=="mouse", time >= 0) %>% select(outside) %>% table() %>% prop.table()
 #get rid of them.?????
-tdat %<>% filter(outside==0, `Event Category`=="mouse")   # this removes all outside movements which occur before ref onset too...
-
+#tdat %<>% filter(outside==0, `Event Category`=="mouse")   # this removes all outside movements which occur before ref onset too...
 ########
 #CHECK OBJ CLICKED
 ########
@@ -147,7 +172,7 @@ left_join(tdat, object_clicks) %>% filter(rt>=200, clicked!="none") -> tdat
 #there must be, but I can't find it.
 
 #round the timestamps to the nearest 20, and then average the X,Y positions
-tdat %>% select(Participant,Trial,Condition,X,Y,time) %>%
+tdat %>% filter(`Event Category`=="mouse") %>% select(Participant,Trial,Condition,X,Y,time) %>% 
   mutate(
    time=mround(time,20)
   ) %>% group_by(Participant, Trial,time) %>%
@@ -182,6 +207,8 @@ tdat_binned %>%
   ) %>% unnest() %>%
   left_join(tdat_binned,.) %>% print() -> tdat_binned
 
+
+
 #sort out whether distance travelled is toward ref or dis
 tdat %>% select(Participant, Trial, Condition, refpos) %>% unique() %>%
   left_join(tdat_binned, .) %>%
@@ -212,7 +239,7 @@ tdat_binned %<>%
   )
 
 
-########
+#######
 #PLOT
 ########
 tdat_binned %>%
@@ -221,7 +248,11 @@ tdat_binned %>%
     group=factor("1")
   ) %>% as.data.frame() %>%
   make_tcplot_data(.,AOIs=c("refprop","disprop"),predictor = "Condition") %>%
-  tcplot_nolines(.,0,2000)+facet_wrap(~Condition)
+  mutate(
+    Object = fct_recode(AOI,"Distractor"="disprop","Referent"="refprop")
+  ) %>%
+  tcplot_nolines(.,0,2000,lcol="Object")+facet_wrap(~Condition)+
+  ylab("proportion cumulative movement towards objects")
 
 #require(gganimate)
 #tdat %>% filter(Participant==2, Trial=="kangaroo", !is.na(X), !is.na(Y)) %>%
