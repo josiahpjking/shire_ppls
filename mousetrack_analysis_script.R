@@ -11,7 +11,7 @@ mround<-function (x, base) {base * round(x/base)}
 
 
 #read in the mousetracking data
-rawdata <- read_csv("~/Downloads/1052-v2-trials (1).csv")
+rawdata <- read_csv("~/Downloads/batch2.csv")
 
 rawdata %>% group_by(Participant, Trial) %>% 
   summarise(
@@ -19,14 +19,16 @@ rawdata %>% group_by(Participant, Trial) %>%
     trialstart1 = as.POSIXct(as.integer(as.numeric(as.character(trialstart)) / 1000.0), origin='1970-01-01', tz="GMT"),
     trialelapse = max(Elapsed),
     condition = first(Condition),
+    list=first(List),
     n=n(),
     datapoints = sum(`Event Type`=="move")) ->dd
 dd
 dd %>% group_by(Participant) %>%
   summarise(
     totaltrials = n(),
-    sum((n-datapoints)<=1),
+    list=first(list),
     emptytrials = sum(datapoints==0),
+    avg_moving = mean(datapoints[datapoints!=0]),
     fails = ifelse(emptytrials>0,"fail","success")
   ) %>% print () -> fails
 
@@ -39,18 +41,16 @@ dd %>% filter(datapoints!=0) %>%
     last1=as.POSIXct(as.integer(as.numeric(as.character(last)) / 1000.0), origin='1970-01-01', tz="GMT")
   ) %>% left_join(.,fails) %>%
   mutate(
-    day = lubridate::day(last1)) -> plotdat
+    day = format(first1, "%d-%m-%y")) -> plotdat
 
 
+  
 ggplot(plotdat, aes(y=factor(Participant),col=fails))+
   geom_point(aes(x=first1,group=Participant))+
   geom_point(aes(x=last1,group=Participant))+
-  ggtitle("start and end points for each participant (valid trials only).\nnotice last participant failed but clearly was not overlapping with others\nso can rule out it being issues due to ppts recording data simultaneously\n(which was the previous problem as far as i could tell)")+facet_wrap(~day,scales="free_x")
+  ggtitle("start and end points for each participant (valid trials only).\nnotice last participant failed but clearly was not overlapping with others\nso can rule out it being issues due to ppts recording data simultaneously\n(which was the previous problem as far as i could tell)")+facet_wrap(~day,scales="free")
 
-
-require(lubridate)
-
-
+ggplot(plotdat, aes(x=emptytrials))+geom_histogram()
 
 #attention checks
 rawdata %>%  filter(Condition=="attention") %>% 
