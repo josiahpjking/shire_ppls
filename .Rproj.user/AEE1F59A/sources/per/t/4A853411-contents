@@ -11,7 +11,9 @@ mround<-function (x, base) {base * round(x/base)}
 
 
 #read in the mousetracking data
-rawdata <- read_csv("~/Downloads/batch2.csv")
+#rawdata <- bind_rows(read_csv("~/Downloads/1052-v3-trials.csv"),read_csv("~/Downloads/1052-v2-trials.csv")) %>% 
+#  bind_rows(.,read_csv("~/Downloads/1052-v1-trials.csv"))
+rawdata <-read_csv("~/Downloads/1052-v3-trials.csv")
 
 rawdata %>% group_by(Participant, Trial) %>% 
   summarise(
@@ -19,38 +21,61 @@ rawdata %>% group_by(Participant, Trial) %>%
     trialstart1 = as.POSIXct(as.integer(as.numeric(as.character(trialstart)) / 1000.0), origin='1970-01-01', tz="GMT"),
     trialelapse = max(Elapsed),
     condition = first(Condition),
-    list=first(List),
     n=n(),
-    datapoints = sum(`Event Type`=="move")) ->dd
-dd
-dd %>% group_by(Participant) %>%
+    datapoints = sum(`Event Type`=="move")) -> trials
+rawdata %>% group_by(Participant) %>%
   summarise(
-    totaltrials = n(),
-    list=first(list),
-    emptytrials = sum(datapoints==0),
-    avg_moving = mean(datapoints[datapoints!=0]),
-    fails = ifelse(emptytrials>0,"fail","success")
-  ) %>% print () -> fails
+    totaltrials = n_distinct(Trial),
+    browser=first(Browser),
+    version=first(Version),
+    os=first(OS),
+    list=first(List)
+    ) %>% mutate(
+      browser = ifelse(Participant%in%c(51,53,55),NA,browser),
+      version = ifelse(Participant%in%c(51,53,55),NA,version),
+      os = ifelse(Participant%in%c(51,53,55),NA,os)
+    ) -> ppts
 
-dd %>% filter(datapoints!=0) %>%
-  group_by(Participant) %>%
+trials %>% group_by(Participant) %>%
+  summarise(
+    empty_trials = sum(n==1)
+  ) %>% left_join(ppts,.) %>% select(Participant, list, browser,version,os,totaltrials,empty_trials) %>%
+  mutate(prop_empty = (empty_trials/totaltrials)) -> ppts
+
+print(ppts)
+
+ppts %>% group_by(browser,version,os) %>% 
+  summarise(
+    nr_ppts = n(),
+    nr_full = sum(totaltrials==64),
+    avg_prop_emptytrials=mean(prop_empty)
+    )
+
+trials %>% filter(datapoints>=1) %>% group_by(Participant) %>%
   summarise(
     first=min(trialstart),
     first1=as.POSIXct(as.integer(as.numeric(as.character(first)) / 1000.0), origin='1970-01-01', tz="GMT"),
     last=max(trialstart),
     last1=as.POSIXct(as.integer(as.numeric(as.character(last)) / 1000.0), origin='1970-01-01', tz="GMT")
-  ) %>% left_join(.,fails) %>%
-  mutate(
-    day = format(first1, "%d-%m-%y")) -> plotdat
-
-
-  
-ggplot(plotdat, aes(y=factor(Participant),col=fails))+
+  ) %>% left_join(ppts, .) %>% mutate(fail=ifelse(prop_empty==0,0,1)) %>%
+ggplot(., aes(y=factor(Participant),col=factor(fail)))+facet_wrap(~browser*version*os)+
   geom_point(aes(x=first1,group=Participant))+
   geom_point(aes(x=last1,group=Participant))+
-  ggtitle("start and end points for each participant (valid trials only).\nnotice last participant failed but clearly was not overlapping with others\nso can rule out it being issues due to ppts recording data simultaneously\n(which was the previous problem as far as i could tell)")+facet_wrap(~day,scales="free")
+  ggtitle("start and end points for each participant (valid trials only).\nnotice last participant failed but clearly was not overlapping with others\nso can rule out it being issues due to ppts recording data simultaneously\n(which was the previous problem as far as i could tell)")
 
-ggplot(plotdat, aes(x=emptytrials))+geom_histogram()
+
+
+#####
+#fix after browser, os, version etc..
+####
+rawdata %>% mutate(
+  `image-left` = ifelse(is.na(`image-left`),Browser,`image-left`),
+  `image-right` = ifelse(is.na(`image-right`),Version,`image-right`),
+  audio = ifelse(is.na(audio),OS,audio)
+) -> rawdata
+
+
+
 
 #attention checks
 rawdata %>%  filter(Condition=="attention") %>% 
