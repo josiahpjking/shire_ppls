@@ -13,10 +13,11 @@ mround<-function (x, base) {base * round(x/base)}
 #read in the mousetracking data
 #rawdata <- bind_rows(read_csv("~/Downloads/1052-v3-trials.csv"),read_csv("~/Downloads/1052-v2-trials.csv")) %>% 
 #  bind_rows(.,read_csv("~/Downloads/1052-v1-trials.csv"))
-rawdata <- read_csv("~/Downloads/1052-v5-trials.csv") #%>%
-  #bind_rows(., read_csv("1052-v3-trials.csv")) %>%
-  #bind_rows(., read_csv("1052-v2-trials.csv")) %>%
-  #bind_rows(., read_csv("1052-v1-trials.csv"))
+rawdata <- read_csv("~/Downloads/1052-v5-trials (1).csv") %>%
+  bind_rows(., read_csv("1052-v4-trials.csv")) %>%
+  bind_rows(., read_csv("1052-v3-trials.csv")) %>%
+  bind_rows(., read_csv("1052-v2-trials.csv")) %>%
+  bind_rows(., read_csv("1052-v1-trials.csv"))
 
 
 rawdata %>% group_by(Participant, Trial) %>% 
@@ -337,12 +338,23 @@ ppt_trial_infos %>% group_by(Participant) %>%
     Browser = first(Browser),
     Version=first(Version),
     OS = first(OS)
+  ) %>% mutate(
+    include=ifelse(att_check>=.75 & p_click_postnoun>=.8,1,0)
+  ) %>% select(Participant,include) -> ppt_infos
+
+left_join(ppt_infos,ppt_trial_infos) %>% 
+  filter(include==1, any_valid==1) %>% 
+  group_by(Participant) %>%
+  summarise(
+    crittrials=n()
   )
+
 
 ######
 #PLOT
 ########
-left_join(tdat_binned,ppt_trial_infos) %>% filter(!is.na(refprop)) %>% 
+left_join(tdat_binned,ppt_infos) %>% left_join(.,ppt_trial_infos) %>%
+  filter(include==1, any_valid==1) %>% 
   mutate(
     CURRENT_BIN = time/20,
     group=factor("1")
