@@ -11,12 +11,7 @@ mround<-function (x, base) {base * round(x/base)}
 
 
 #read in the mousetracking data
-#rawdata <- bind_rows(read_csv("~/Downloads/1052-v3-trials.csv"),read_csv("~/Downloads/1052-v2-trials.csv")) %>% 
-#  bind_rows(.,read_csv("~/Downloads/1052-v1-trials.csv"))
-rawdata <- read_csv("1052-v4-trials.csv") #%>%
-  #bind_rows(., read_csv("1052-v3-trials.csv")) %>%
-  #bind_rows(., read_csv("1052-v2-trials.csv")) %>%
-  #bind_rows(., read_csv("1052-v1-trials.csv"))
+rawdata <- bind_rows(lapply(list.files(".",pattern="1052-v5"), read_csv))
 
 
 rawdata %>% group_by(Participant, Trial) %>% 
@@ -39,22 +34,18 @@ rawdata %>% group_by(Participant) %>%
       version = ifelse(Participant%in%c(51,53,55),NA,version),
       os = ifelse(Participant%in%c(51,53,55),NA,os)
     ) -> ppts
-
 trials %>% group_by(Participant) %>%
   summarise(
     empty_trials = sum(n==1)
   ) %>% left_join(ppts,.) %>% select(Participant, list, browser,version,os,totaltrials,empty_trials) %>%
   mutate(prop_empty = (empty_trials/totaltrials)) -> ppts
-
 print(ppts)
-
 ppts %>% group_by(browser,version,os) %>% 
   summarise(
     nr_ppts = n(),
     nr_full = sum(totaltrials==64),
     avg_prop_emptytrials=mean(prop_empty)
     )
-
 trials %>% filter(datapoints>=1) %>% group_by(Participant) %>%
   summarise(
     first=min(trialstart),
@@ -66,7 +57,9 @@ ggplot(., aes(y=factor(Participant),col=factor(fail)))+#facet_wrap(~browser*vers
   geom_point(aes(x=first1,group=Participant))+
   geom_point(aes(x=last1,group=Participant))+
   ggtitle("start and end points for each participant (valid trials only).\nnotice last participant failed but clearly was not overlapping with others\nso can rule out it being issues due to ppts recording data simultaneously\n(which was the previous problem as far as i could tell)")
-
+#######
+rm(ppts,trials)
+########
 
 
 #####
@@ -94,8 +87,12 @@ rawdata %>% filter(Condition=="attention") %>%
     clicked = ifelse(clicked_pos==first(refpos), 1, 0)
   ) %>% group_by(Participant) %>%
   summarise(
+    att_checkN = n(),
     att_check = sum(clicked)/n()
-  ) %>% select(Participant, att_check) %>% print() -> ppt_att_check
+  ) %>% print() -> ppt_att_check
+
+rawdata %>% filter(!grepl("attention",Condition)) %>%
+  left_join(., ppt_att_check) -> rawdata
 
 #any ppts clicking more on one side than the other?
 rawdata %>% group_by(Participant, Trial) %>% 
@@ -110,6 +107,9 @@ rawdata %>% group_by(Participant, Trial) %>%
   ) %>% select(Participant, Lside_clicks) %>% print()
 
 
+####
+#data proc
+####
 #tidy data, then..
 tdat <- rawdata %>% 
   mutate(
@@ -119,31 +119,6 @@ tdat <- rawdata %>%
     refpos=substring(Condition,nchar(Condition)),
     Condition=substring(Condition,4,nchar(Condition)-1)
   ) %>% print()
-#remove any who clicked on the non animal in any attention check trials
-left_join(tdat, ppt_att_check) -> tdat 
-
-####FILTER TO CRITICAL TRIALS
-tdat %<>% filter(Condition!="Filler",Condition!="entio")
-
-########
-#EARLY EARLY CLICKS
-########
-#check that audio has begun playing in all trials (e.g. remove any who click immediately)
-tdat %>% 
-  group_by(Participant, Trial) %>%
-  summarise(
-    valid_trial = +("playbackstart"%in%`Event Type`)
-  ) -> invalid_trials
-
-#are there any participants who did it repeatedly?
-invalid_trials %>% group_by(Participant) %>%
-  summarise(
-    valid_ppt=sum(valid_trial==1)/n()
-  ) -> invalid_ppts
-print(invalid_ppts)
-#remove invalid trials
-left_join(tdat, invalid_trials) %>% left_join(., invalid_ppts) -> tdat
-
 
 ########
 #AUDIO DURATIONS
@@ -173,28 +148,6 @@ left_join(tdat, audio) %>%
     audio1_end = audio1_start+audio1_duration,
     time = Elapsed-audio1_end
   ) -> tdat
-
-########
-#EARLY CLICKS
-########
-#click time
-tdat %>% group_by(Participant, Trial) %>%
-  summarise(
-    clicktime = last(time[`Event Type`=="click"])
-  ) %>% left_join(tdat,.) -> tdat
-
-#are there any participants who did it repeatedly before noun onset?
-tdat %>% group_by(Participant, Trial) %>%
-  summarise(
-    clicktime=first(clicktime)
-  ) %>% group_by(Participant) %>% 
-  summarise(
-    earlyclicks=sum(clicktime<=0,na.rm=T)/n()
-    ) %>% left_join(tdat,.) -> tdat
-
-
-####FILTER TO CRITICAL TRIALS
-tdat %<>% filter(Condition!="Filler",Condition!="entio")
 
 ########
 #MOVEMENTS BEYOND OUTER EDGE
@@ -272,8 +225,6 @@ tdat_binned %>%
   ) %>% unnest() %>%
   left_join(tdat_binned,.) %>% print() -> tdat_binned
 
-
-
 #sort out whether distance travelled is toward ref or dis
 tdat %>% select(Participant, Trial, Condition, refpos) %>% unique() %>%
   left_join(tdat_binned, .) %>%
@@ -304,45 +255,47 @@ tdat_binned %<>%
   )
 
 
+####FILTERS
 
-tdat %>%
-  group_by(Participant, Trial) %>% summarise(
-  att_check = first(att_check),
-  valid_trial= first(valid_trial),
-  earlyclicks = first(earlyclicks),
-  valid_ppt = first(valid_ppt),
-  clicked=first(clicked),
-  Browser = first(Browser),
-  Version=first(Version),
-  OS = first(OS),
-  any_valid = ifelse(valid_trial==0,0,
-                   ifelse(clicktime<=0,0,1))
-) -> ppt_trial_infos
-
-######
-#Remove idiots
-#filter(att_check==1) -> tdat
-#remove early trials
-#filter(valid_trial==1)
-#remove early ppts
-#filter(valid_ppt==1)
-#####
-#filter(rt>=200, clicked!="none")
-
-ppt_trial_infos %>% group_by(Participant) %>% 
+#EARLY EARLY CLICKS
+#check that audio has begun playing in all trials (e.g. remove any who click immediately)
+tdat %>% 
+  group_by(Participant, Trial) %>%
   summarise(
-    crit_trials = n_distinct(Trial),
+    audio_played = +("playbackstart"%in%`Event Type`),
+    datapoints = sum(`Event Type`=="move"),
+    clicktime = last(time[`Event Type`=="click"]),
     att_check = first(att_check),
-    p_click_postnoun=sum(any_valid)/n(),
+    clicked=first(clicked),
+    condition=first(Condition),
     Browser = first(Browser),
     Version=first(Version),
     OS = first(OS)
-  ) -> pppp1
+) %>% print -> ppt_trial_info
+
+#are there any participants who did it repeatedly?
+ppt_trial_info %>% group_by(Participant) %>%
+  summarise(
+    total_trials = n_distinct(Trial),
+    crit_trials = n_distinct(Trial[condition!="Filler"]),
+    empty_trials=sum(datapoints==0),
+    att_check = first(att_check),
+    n_clickpreaudio = sum(audio_played==0),
+    n_clickprenoun = sum(clicktime<=0 & !is.na(clicked) & datapoints!=0,na.rm=T),
+    #p_complete_trials=sum(any_valid)/n(),
+    Browser = first(Browser),
+    Version=first(Version),
+    OS = first(OS)
+  ) %>% print -> ppt_info
+
+
 
 ######
 #PLOT
 ########
-left_join(tdat_binned,ppt_trial_infos) %>% filter(!is.na(refprop)) %>% 
+tdat_binned %>% filter(Condition!="Filler") %>%
+#left_join(.,ppt_infos) %>% left_join(.,ppt_trial_infos) %>%
+  #filter(include==1, any_valid==1) %>% 
   mutate(
     CURRENT_BIN = time/20,
     group=factor("1")
