@@ -277,17 +277,19 @@ tdat %>%
 ppt_trial_info %>% group_by(Participant) %>%
   summarise(
     total_trials = n_distinct(Trial),
-    crit_trials = n_distinct(Trial[condition!="Filler"]),
     empty_trials=sum(datapoints==0),
+    crit_trials = n_distinct(Trial[condition!="Filler"]),
+    crit_nonempty_trials = n_distinct(Trial[condition!="Filler" & datapoints!=0]),
     att_check = first(att_check),
-    n_clickpreaudio = sum(audio_played==0),
-    n_clickprenoun = sum(clicktime<=0 & !is.na(clicked) & datapoints!=0,na.rm=T),
-    #p_complete_trials=sum(any_valid)/n(),
-    Browser = first(Browser),
-    Version=first(Version),
-    OS = first(OS)
+    n_clickprenoun_nonempty = sum(!is.na(clicked) & datapoints!=0 & (clicktime<=0|audio_played==0),na.rm=T),
+    p_clickprenoun_nonempty = sum(!is.na(clicked) & datapoints!=0 & (clicktime<=0|audio_played==0),na.rm=T)/total_trials*100,
+    avg_clicktime = mean(clicktime,na.rm=T),
+    #Browser = first(Browser),
+    #Version=first(Version),
+    #OS = first(OS)
   ) %>% print -> ppt_info
 
+ppt_info %>% filter(crit_nonempty_trials==20,p_clickprenoun_nonempty<=5,att_check>=.75)
 
 
 ######
