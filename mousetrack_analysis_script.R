@@ -11,7 +11,8 @@ mround<-function (x, base) {base * round(x/base)}
 
 
 #read in the mousetracking data
-rawdata <- bind_rows(lapply(list.files(".",pattern="1052-v5"), read_csv))
+rawdata <- bind_rows(lapply(list.files(path="data/",pattern="1052-v",full.names=T), read_csv))
+qdata <- bind_rows(lapply(list.files(path="qu_data/",pattern="1052-v6",full.names=T), read_csv))
 
 
 rawdata %>% group_by(Participant, Trial) %>% 
@@ -289,15 +290,38 @@ ppt_trial_info %>% group_by(Participant) %>%
     #OS = first(OS)
   ) %>% print -> ppt_info
 
+qdata %>% filter(grepl("MTurk",Question)) %>% rename(
+  mturk_id = `Answers...`
+) %>% select(Participant, mturk_id) %>% right_join(.,ppt_info) %>% print -> ppt_info
+  
 ppt_info %>% filter(crit_nonempty_trials==20,p_clickprenoun_nonempty<=5,att_check>=.75)
 
+workers<-read_tsv("mturkers.csv")
+workers %<>% mutate(
+  duplicated = duplicated(`WORKER ID`)
+) %>% arrange(`WORKER ID`)
+
+#########
+#INCLUSION CONDITIONS
+ppt_info %<>% mutate(
+  include_ppt = ifelse(total_trials==60 & crit_trials==20 & (att_check>=.5|p_clickprenoun_nonempty<=5|avg_clicktime>=200),1,0)
+)
+ppt_trial_info %<>% mutate(
+  include_trial = ifelse(datapoints!=0 & clicked!="none" & clicktime>=200 & audio_played==1, 1, 0)
+)
+
+tdat_binned %<>% filter(Condition!="Filler") %>%
+  left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) %>%
+  filter(include_ppt==1, include_trial==1)
+
+tdat %<>% filter(Condition!="Filler") %>%
+  left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) %>%
+  filter(include_ppt==1, include_trial==1)
 
 ######
 #PLOT
 ########
-tdat_binned %>% filter(Condition!="Filler") %>%
-#left_join(.,ppt_infos) %>% left_join(.,ppt_trial_infos) %>%
-  #filter(include==1, any_valid==1) %>% 
+tdat_binned %>%
   mutate(
     CURRENT_BIN = time/20,
     group=factor("1")
@@ -314,6 +338,15 @@ tdat_binned %>% filter(Condition!="Filler") %>%
 #  ggplot(.,aes(x=X,y=Y)) + geom_point() + xlim(-512,512)+ylim(-300,300) +
 #  transition_time(Elapsed) +
 #  ease_aes('linear') -> p
+
+tdat %>% group_by(Participant, Trial) %>%
+  summarise(
+   clicked=first(clicked),
+   condition=first(condition)
+  ) %>% group_by(condition) %>%
+  summarise(
+    refclicks=sum(clicked=="ref")/n()
+  )
 
 require(lme4)
 object_clicks %<>% filter(clicked!="none",rt>=200)
@@ -351,13 +384,26 @@ aggdat <- aggdat %>% mutate(
 )
 aggdat$fluency<-relevel(aggdat$fluency,ref="Fluent")
 #contrasts(aggdat$fluency)<-c(-.5,.5)
-
-
+require(lme4)
 model_mouse<-lmer(elog_bias~fluency*time_s+(1+fluency+time_s|sub)+(1+fluency+time_s|ref),aggdat)
 summary(model_mouse)
 
 aggdat %>% mutate(
   CURRENT_BIN = time_s/0.02,
   fitted=fitted(model_mouse)
-) %>% make_tcplot_data(.,c("elog_bias","fitted"),"fluency") %>%
-  tcplot_nolines(.) + ylim(-5,5) +facet_wrap(~fluency) -> modplotmouse
+) %>% make_tcplot_data(.,c("elog_bias","fitted"),"fluency") -> plotdat
+  
+ggplot(plotdat,aes(x=time,col=fluency,fill=fluency))+
+  geom_point(data=plotdat[!grepl("fitted",plotdat$AOI),],aes(y=mean_prop))+
+  geom_ribbon(data=plotdat[!grepl("fitted",plotdat$AOI),],aes(ymin=low,ymax=up),col=NA,alpha=0.2)+
+  geom_line(data=plotdat[grepl("fitted",plotdat$AOI),],aes(y=mean_prop))+
+  scale_colour_manual(values=c("#2171B5","#31A354"))+
+  scale_fill_manual(values=c("#2171B5","#31A354"))+
+  ylab("Empirical logit transformed movement bias toward\nreferent over distractor")+
+  xlab("Time (ms) relative to referent onset")+
+  theme_bw()+
+  #facet_wrap(~fluency)+
+  theme(text = element_text(size=16),legend.position = "bottom")+
+  ggtitle("Mouse movements")+
+  NULL 
+
