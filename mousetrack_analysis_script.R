@@ -12,56 +12,7 @@ mround<-function (x, base) {base * round(x/base)}
 
 #read in the mousetracking data
 rawdata <- bind_rows(lapply(list.files(path="data/",pattern="1052-v",full.names=T), read_csv))
-qdata <- bind_rows(lapply(list.files(path="qu_data/",pattern="1052-v6",full.names=T), read_csv))
-
-
-rawdata %>% group_by(Participant, Trial) %>% 
-  summarise(
-    trialstart = first(`Trial Start`),
-    trialstart1 = as.POSIXct(as.integer(as.numeric(as.character(trialstart)) / 1000.0), origin='1970-01-01', tz="GMT"),
-    trialelapse = max(Elapsed),
-    condition = first(Condition),
-    n=n(),
-    datapoints = sum(`Event Type`=="move")) -> trials
-rawdata %>% group_by(Participant) %>%
-  summarise(
-    totaltrials = n_distinct(Trial),
-    browser=first(Browser),
-    version=first(Version),
-    os=first(OS),
-    list=first(List)
-    ) %>% mutate(
-      browser = ifelse(Participant%in%c(51,53,55),NA,browser),
-      version = ifelse(Participant%in%c(51,53,55),NA,version),
-      os = ifelse(Participant%in%c(51,53,55),NA,os)
-    ) -> ppts
-trials %>% group_by(Participant) %>%
-  summarise(
-    empty_trials = sum(n==1)
-  ) %>% left_join(ppts,.) %>% select(Participant, list, browser,version,os,totaltrials,empty_trials) %>%
-  mutate(prop_empty = (empty_trials/totaltrials)) -> ppts
-print(ppts)
-ppts %>% group_by(browser,version,os) %>% 
-  summarise(
-    nr_ppts = n(),
-    nr_full = sum(totaltrials==64),
-    avg_prop_emptytrials=mean(prop_empty)
-    )
-trials %>% filter(datapoints>=1) %>% group_by(Participant) %>%
-  summarise(
-    first=min(trialstart),
-    first1=as.POSIXct(as.integer(as.numeric(as.character(first)) / 1000.0), origin='1970-01-01', tz="GMT"),
-    last=max(trialstart),
-    last1=as.POSIXct(as.integer(as.numeric(as.character(last)) / 1000.0), origin='1970-01-01', tz="GMT")
-  ) %>% left_join(ppts, .) %>% mutate(fail=ifelse(prop_empty==0,0,1)) %>%
-ggplot(., aes(y=factor(Participant),col=factor(fail)))+#facet_wrap(~browser*version*os,scales="free_x")+
-  geom_point(aes(x=first1,group=Participant))+
-  geom_point(aes(x=last1,group=Participant))+
-  ggtitle("start and end points for each participant (valid trials only).\nnotice last participant failed but clearly was not overlapping with others\nso can rule out it being issues due to ppts recording data simultaneously\n(which was the previous problem as far as i could tell)")
-#######
-rm(ppts,trials)
-########
-
+qdata <- bind_rows(lapply(list.files(path="qu_data/",pattern="1052-v",full.names=T), read_csv))
 
 #####
 #fix after browser, os, version etc..
@@ -260,9 +211,10 @@ tdat_binned %<>%
 
 #EARLY EARLY CLICKS
 #check that audio has begun playing in all trials (e.g. remove any who click immediately)
-tdat %>% 
+tdat %>%
   group_by(Participant, Trial) %>%
   summarise(
+    trialstart = first(`Trial Start`),
     audio_played = +("playbackstart"%in%`Event Type`),
     datapoints = sum(`Event Type`=="move"),
     clicktime = last(time[`Event Type`=="click"]),
@@ -285,30 +237,74 @@ ppt_trial_info %>% group_by(Participant) %>%
     n_clickprenoun_nonempty = sum(!is.na(clicked) & datapoints!=0 & (clicktime<=0|audio_played==0),na.rm=T),
     p_clickprenoun_nonempty = sum(!is.na(clicked) & datapoints!=0 & (clicktime<=0|audio_played==0),na.rm=T)/total_trials*100,
     avg_clicktime = mean(clicktime,na.rm=T),
-    #Browser = first(Browser),
-    #Version=first(Version),
-    #OS = first(OS)
+    first_time1=as.POSIXct(as.integer(as.numeric(as.character(min(trialstart[trialstart>946684800
+]))) / 1000.0), origin='1970-01-01', tz="GMT"),
+    last_time=as.POSIXct(as.integer(as.numeric(as.character(max(trialstart))) / 1000.0), origin='1970-01-01', tz="GMT"),
+    time_taken=difftime(last_time,first_time1,units="mins"),
+    Browser = first(Browser),
+    Version=first(Version),
+    OS = first(OS)
   ) %>% print -> ppt_info
 
 qdata %>% filter(grepl("MTurk",Question)) %>% rename(
   mturk_id = `Answers...`
 ) %>% select(Participant, mturk_id) %>% right_join(.,ppt_info) %>% print -> ppt_info
-  
-ppt_info %>% filter(crit_nonempty_trials==20,p_clickprenoun_nonempty<=5,att_check>=.75)
+qdata %>% filter(grepl("language",Question)) %>% rename(
+  bilingual = `Answers...`
+) %>% select(Participant, bilingual) %>% right_join(.,ppt_info) %>% print -> ppt_info
+
 
 workers<-read_tsv("mturkers.csv")
 workers %<>% mutate(
   duplicated = duplicated(`WORKER ID`)
 ) %>% arrange(`WORKER ID`)
 
+
+
 #########
 #INCLUSION CONDITIONS
 ppt_info %<>% mutate(
-  include_ppt = ifelse(total_trials==60 & crit_trials==20 & (att_check>=.5|p_clickprenoun_nonempty<=5|avg_clicktime>=200),1,0)
+  include_ppt = ifelse(total_trials==60 & 
+                         crit_nonempty_trials>=10 & 
+                         att_check>=.5 &
+                         p_clickprenoun_nonempty<=5 &
+                         avg_clicktime>=200,1,0)
 )
 ppt_trial_info %<>% mutate(
-  include_trial = ifelse(datapoints!=0 & clicked!="none" & clicktime>=200 & audio_played==1, 1, 0)
+  include_trial = ifelse(datapoints!=0 & 
+                           clicked!="none" & 
+                           clicktime>=200 & 
+                           audio_played==1, 1, 0)
 )
+
+ggplot(ppt_info, aes(y=factor(Participant),col=factor(att_check)))+
+  geom_point(aes(x=last_time,group=Participant))+facet_wrap(~include_ppt)
+
+
+require(plotly)
+require(RColorBrewer)
+ppt_info %>% mutate(
+  text = paste(mturk_id,paste0("<b>include:</b>",include_ppt),
+               paste0("<b>p_earlyclick:</b>",p_clickprenoun_nonempty,"%"),
+               paste0("<b>av clicktime:</b>",avg_clicktime),
+               paste0("<b>total trials:</b>",total_trials),
+               paste0("<b>non empty crit trials:</b>",crit_nonempty_trials),
+               paste0("<b>att check:</b>",att_check),
+               paste0("<b>time taken:</b>",time_taken),
+               sep="<br>")
+) %>%
+plot_ly(.,
+        x=~last_time,
+        y=~Participant,
+        type="scatter",
+        mode="markers",
+        color=~factor(include_ppt),
+        colors=brewer.pal(4,"Dark2")[c(4,1)],
+        marker = list(size = 10),
+        text=~text,
+        hoverinfo="text"
+        )
+
 
 tdat_binned %<>% filter(Condition!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) %>%
