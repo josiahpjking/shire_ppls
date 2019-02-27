@@ -260,7 +260,6 @@ workers %<>% mutate(
 ) %>% arrange(`WORKER ID`)
 
 
-
 #########
 #INCLUSION CONDITIONS
 ppt_info %<>% mutate(
@@ -280,6 +279,8 @@ ppt_trial_info %<>% mutate(
 ggplot(ppt_info, aes(y=factor(Participant),col=factor(att_check)))+
   geom_point(aes(x=last_time,group=Participant))+facet_wrap(~include_ppt)
 
+ppt_info %>% select(include_ppt) %>% table
+
 
 require(plotly)
 require(RColorBrewer)
@@ -292,8 +293,7 @@ ppt_info %>% mutate(
                paste0("<b>att check:</b>",att_check),
                paste0("<b>time taken:</b>",time_taken),
                sep="<br>")
-) %>%
-plot_ly(.,
+) %>% plot_ly(.,
         x=~last_time,
         y=~Participant,
         type="scatter",
@@ -306,13 +306,14 @@ plot_ly(.,
         )
 
 
+
 tdat_binned %<>% filter(Condition!="Filler") %>%
-  left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) %>%
-  filter(include_ppt==1, include_trial==1)
+  left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%
+  #filter(include_ppt==1, include_trial==1)
 
 tdat %<>% filter(Condition!="Filler") %>%
-  left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) %>%
-  filter(include_ppt==1, include_trial==1)
+  left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%
+  #filter(include_ppt==1, include_trial==1)
 
 ######
 #PLOT
