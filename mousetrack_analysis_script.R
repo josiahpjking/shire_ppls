@@ -2,7 +2,7 @@ require(tidyverse)
 require(magrittr)
 require(conflicted)
 conflict_prefer("filter","dplyr")
-source("functions/make_tcplot_data.R")
+source("functions/make_tcplotdata.R")
 source("functions/tcplot.R")
 source("functions/tcplot_nolines.R")
 mround<-function (x, base) {base * round(x/base)}
@@ -248,16 +248,27 @@ ppt_trial_info %>% group_by(Participant) %>%
 
 qdata %>% filter(grepl("MTurk",Question)) %>% rename(
   mturk_id = `Answers...`
-) %>% select(Participant, mturk_id) %>% right_join(.,ppt_info) %>% print -> ppt_info
+) %>% select(Participant, mturk_id) %>% right_join(.,ppt_info) %>% 
+  mutate(
+    duplicate = duplicated(mturk_id)
+  ) %>% print -> ppt_info
 qdata %>% filter(grepl("language",Question)) %>% rename(
   bilingual = `Answers...`
 ) %>% select(Participant, bilingual) %>% right_join(.,ppt_info) %>% print -> ppt_info
 
 
-workers<-read_tsv("mturkers.csv")
-workers %<>% mutate(
-  duplicated = duplicated(`WORKER ID`)
-) %>% arrange(`WORKER ID`)
+workers<-read_tsv("mturkers.csv") %>% filter(!is.na(`WORKER ID`))
+workers %>% mutate(mturk_id=substring(`WORKER ID`,3)) %>%
+  group_by(mturk_id) %>%
+   summarise(
+     nr_attempts = n(),
+     batches=gsub("mtrack_loy ","",toString(BATCH)),
+     comments=toString(COMMENTS)
+   ) %>% filter(nr_attempts>1) -> dup_workers
+# workers %>% mutate(
+#   duplicate=duplicated(`WORKER ID`),
+#   mturk_id=substring(`WORKER ID`,3)
+# ) %>% filter(duplicate==TRUE,!is.na(mturk_id)) -> dup_workers
 
 
 #########
@@ -267,13 +278,15 @@ ppt_info %<>% mutate(
                          crit_nonempty_trials>=10 & 
                          att_check>=.5 &
                          p_clickprenoun_nonempty<=5 &
-                         avg_clicktime>=200,1,0)
+                         avg_clicktime>=200,"valid","invalid"),
+  duplicate = ifelse(mturk_id %in% dup_workers$mturk_id, "duplicate","n-dup"),
+  dup_incl = paste0(include_ppt," : ",duplicate)
 )
 ppt_trial_info %<>% mutate(
   include_trial = ifelse(datapoints!=0 & 
                            clicked!="none" & 
                            clicktime>=200 & 
-                           audio_played==1, 1, 0)
+                           audio_played==1, "valid","invalid")
 )
 
 ggplot(ppt_info, aes(y=factor(Participant),col=factor(att_check)))+
@@ -286,6 +299,7 @@ require(plotly)
 require(RColorBrewer)
 ppt_info %>% mutate(
   text = paste(mturk_id,paste0("<b>include:</b>",include_ppt),
+               paste0("<b>duplicate:</b>",duplicate),
                paste0("<b>p_earlyclick:</b>",p_clickprenoun_nonempty,"%"),
                paste0("<b>av clicktime:</b>",avg_clicktime),
                paste0("<b>total trials:</b>",total_trials),
@@ -298,7 +312,7 @@ ppt_info %>% mutate(
         y=~Participant,
         type="scatter",
         mode="markers",
-        color=~factor(include_ppt),
+        color=~factor(dup_incl),
         colors=brewer.pal(4,"Dark2")[c(4,1)],
         marker = list(size = 10),
         text=~text,
@@ -309,25 +323,22 @@ ppt_info %>% mutate(
 
 tdat_binned %<>% filter(Condition!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%
-  #filter(include_ppt==1, include_trial==1)
+  #filter(include_ppt=="valid", include_trial=="valid")
 
 tdat %<>% filter(Condition!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%
-  #filter(include_ppt==1, include_trial==1)
+  #filter(include_ppt=="valid", include_trial=="valid")
 
 ######
 #PLOT
 ########
-tdat_binned %>%
-  mutate(
-    CURRENT_BIN = time/20,
-    group=factor("1")
-  ) %>% as.data.frame() %>%
-  make_tcplot_data(.,AOIs=c("refprop","disprop"),predictor = "Condition") %>%
+tdat_binned %>% filter(duplicate=="n-dup",include_ppt=="valid",include_trial=="valid") %>%
+  mutate(CURRENT_BIN = time/20) %>% 
+  make_tcplotdata(.,AOIs=c(refprop,disprop),subj=Participant,Condition) %>%
   mutate(
     Object = fct_recode(AOI,"Distractor"="disprop","Referent"="refprop")
-  ) %>%
-  tcplot_nolines(.,0,2000,lcol="Object")+facet_wrap(~Condition)+
+  ) %>% 
+  tcplot(lty=AOI,col=Condition)+
   ylab("proportion cumulative movement towards objects")
 
 #require(gganimate)
