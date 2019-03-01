@@ -330,20 +330,19 @@ tdat %<>% filter(Condition!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%
   #filter(include_ppt=="valid", include_trial=="valid")
 
-
-ppt_info %>% filter(duplicate=="n-dup",include_ppt=="valid") %>% pull(Participant) %>% n_distinct()
+ppt_info %>% filter(include_ppt=="valid") %>% select(duplicate) %>% table
 
 
 ######
 #PLOT
 ########
-tdat_binned %>% filter(duplicate=="n-dup",include_ppt=="valid",include_trial=="valid") %>%
+tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate!="duplicate") %>%
   mutate(CURRENT_BIN = time/20) %>% 
-  make_tcplotdata(.,AOIs=c(refprop,disprop),subj=Participant,Condition) %>%
+  make_tcplotdata(.,AOIs=c(refprop,disprop),subj=Participant,Condition,duplicate) %>%
   mutate(
     Object = fct_recode(AOI,"Distractor"="disprop","Referent"="refprop")
   ) %>% 
-  tcplot(lty=Condition)+
+  tcplot(lty=Condition)+facet_wrap(~duplicate)+
   ylab("proportion cumulative movement towards objects")
 
 #require(gganimate)
