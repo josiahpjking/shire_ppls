@@ -20,7 +20,6 @@ tcplot<-function(df,xmin=0,xmax=2000,col=AOI,lty=NULL,x=time,y=mean_prop,ymin=lo
     xlim(xmin, xmax) + ylim(0, 1) + 
     xlab("Time") +
     geom_line(lwd = 1.5) + 
-    scale_linetype_manual(values=1:6)+
     geom_ribbon(data = df, aes(x = !!x, ymin = !!ymin, ymax = !!ymax), colour = NA, alpha = 0.2, lwd = 1.5)+
     NULL
 

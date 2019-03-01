@@ -8,7 +8,7 @@
 #' @export
 #' @examples
 #' plottingdata <- make_tcplotdata(df,AOIs=c(refprop,disprop),subj=Participant,fluency,gesture)
-#' tcplot(plottingdata,0,2000,col="AOI",linetype="fluency")+facet_wrap(~gesture)
+#' tcplot(plottingdata,0,2000,lty=fluency)+facet_wrap(~gesture)
 make_tcplotdata<-function(df,AOIs,subj,...,bin=CURRENT_BIN, bin_interval=20){
   subj=enquo(subj)
   bin=enquo(bin)

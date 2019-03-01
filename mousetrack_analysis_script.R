@@ -274,12 +274,13 @@ workers %>% mutate(mturk_id=substring(`WORKER ID`,3)) %>%
 #########
 #INCLUSION CONDITIONS
 ppt_info %<>% mutate(
-  include_ppt = ifelse(total_trials==60 & 
+  include_ppt = ifelse(total_trials>=55 & 
                          crit_nonempty_trials>=10 & 
                          att_check>=.5 &
                          p_clickprenoun_nonempty<=5 &
                          avg_clicktime>=200,"valid","invalid"),
-  duplicate = ifelse(mturk_id %in% dup_workers$mturk_id, "duplicate","n-dup"),
+  duplicate = ifelse(mturk_id %in% dup_workers$mturk_id, "duplicate",
+                     ifelse(!is.na(mturk_id),"n-dup","unknown")),
   dup_incl = paste0(include_ppt," : ",duplicate)
 )
 ppt_trial_info %<>% mutate(
@@ -329,6 +330,10 @@ tdat %<>% filter(Condition!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%
   #filter(include_ppt=="valid", include_trial=="valid")
 
+
+ppt_info %>% filter(duplicate=="n-dup",include_ppt=="valid") %>% pull(Participant) %>% n_distinct()
+
+
 ######
 #PLOT
 ########
@@ -338,7 +343,7 @@ tdat_binned %>% filter(duplicate=="n-dup",include_ppt=="valid",include_trial=="v
   mutate(
     Object = fct_recode(AOI,"Distractor"="disprop","Referent"="refprop")
   ) %>% 
-  tcplot(lty=AOI,col=Condition)+
+  tcplot(lty=Condition)+
   ylab("proportion cumulative movement towards objects")
 
 #require(gganimate)
