@@ -25,6 +25,6 @@ make_tcplotdata<-function(df,AOIs,subj,...,bin=CURRENT_BIN, bin_interval=20){
       up=mean_prop+se
     ) %>% mutate(
       time=!!bin*bin_interval
-    )
+    ) %>% ungroup()
 }
 

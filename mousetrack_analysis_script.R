@@ -345,6 +345,18 @@ tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate!="d
   tcplot(lty=Condition)+facet_wrap(~duplicate)+
   ylab("proportion cumulative movement towards objects")
 
+#elog bias plot
+tdat_binned %>% 
+  filter(include_ppt=="valid",include_trial=="valid",duplicate=="n-dup") %>% 
+  mutate(
+    CURRENT_BIN=time/20,
+    Relog = log(refprop + .5/ (1 - refprop + .5)),
+    Delog = log(disprop + .5/ (1 - disprop + .5)),
+    elog_bias = Relog - Delog
+  ) %>% make_tcplotdata(.,elog_bias,Participant,Condition) %>% 
+  tcplot(lty=Condition)+ylim(-.5,1.5)+xlim(0,800)
+
+
 #require(gganimate)
 #tdat %>% filter(Participant==2, Trial=="kangaroo", !is.na(X), !is.na(Y)) %>%
 #  ggplot(.,aes(x=X,y=Y)) + geom_point() + xlim(-512,512)+ylim(-300,300) +
