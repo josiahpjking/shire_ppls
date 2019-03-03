@@ -282,9 +282,8 @@ ppt_info %<>% mutate(
                          p_clickprenoun_nonempty<=5 &
                          avg_clicktime>=200,"valid","invalid"),
   duplicate = ifelse(mturk_id %in% dup_workers$mturk_id, "duplicate",
-                     ifelse(!is.na(mturk_id),"n-dup","unknown")),
-  dup_incl = paste0(include_ppt," : ",duplicate)
-)
+                     ifelse(!is.na(mturk_id),"n-dup","unknown"))
+  )
 
 ppt_info %>% group_by(mturk_id) %>% 
   summarise(
@@ -292,9 +291,15 @@ ppt_info %>% group_by(mturk_id) %>%
     pptnums = list(Participant),
     pptnums_str = toString(Participant),
     ppt_trials = toString(total_trials),
-    ppt_valid = toString(include_ppt)
-    
-  ) %>% filter(!is.na(mturk_id),nppt_nums>1)
+    ppt_valid = toString(include_ppt),
+    ppt_first = min(which(total_trials==60)),
+    valid_nums = Participant[ppt_first]
+  ) %>% filter(!is.na(mturk_id),nppt_nums>1) %>% pull(valid_nums) -> first_of_dups
+
+ppt_info %>% mutate(
+  duplicate2 = ifelse(duplicate=="duplicate" & Participant %in% first_of_dups,"n-dup",duplicate),
+  dup_incl = paste0(include_ppt," : ",duplicate2)
+) -> ppt_info
 
 #take the first ppt num, unless we've got something like ppts 92,93. need conditional..
 
@@ -316,7 +321,7 @@ require(plotly)
 require(RColorBrewer)
 ppt_info %>% mutate(
   text = paste(mturk_id,paste0("<b>include:</b>",include_ppt),
-               paste0("<b>duplicate:</b>",duplicate),
+               paste0("<b>duplicate:</b>",duplicate2),
                paste0("<b>p_earlyclick:</b>",p_clickprenoun_nonempty,"%"),
                paste0("<b>av clicktime:</b>",avg_clicktime),
                paste0("<b>total trials:</b>",total_trials),
@@ -346,5 +351,5 @@ tdat %<>% filter(Condition!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%
   #filter(include_ppt=="valid", include_trial=="valid")
 
-ppt_info %>% filter(include_ppt=="valid") %>% select(duplicate) %>% table
+ppt_info %>% filter(include_ppt=="valid") %>% select(duplicate2) %>% table
 

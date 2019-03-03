@@ -3,18 +3,18 @@
 ######
 #PLOT
 ########
-tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate!="duplicate") %>%
+tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate2!="duplicate") %>%
   mutate(CURRENT_BIN = time/20) %>% 
-  make_tcplotdata(.,AOIs=c(refprop,disprop),subj=Participant,Condition,duplicate) %>%
+  make_tcplotdata(.,AOIs=c(refprop,disprop),subj=Participant,Condition,duplicate2) %>%
   mutate(
     Object = fct_recode(AOI,"Distractor"="disprop","Referent"="refprop")
   ) %>% 
-  tcplot(lty=Condition)+facet_wrap(~duplicate)+
+  tcplot(lty=Condition)+facet_wrap(~duplicate2)+
   ylab("proportion cumulative movement towards objects")
 
 #elog bias plot
 tdat_binned %>% 
-  filter(include_ppt=="valid",include_trial=="valid",duplicate=="n-dup") %>% 
+  filter(include_ppt=="valid",include_trial=="valid",duplicate2=="n-dup") %>% 
   mutate(
     CURRENT_BIN=time/20,
     Relog = log(refprop + .5/ (1 - refprop + .5)),
@@ -35,10 +35,12 @@ tdat_binned %>%
 tdat %>% group_by(Participant, Trial) %>%
   summarise(
     clicked=first(clicked),
-    condition=first(condition)
+    condition=first(condition),
+    rt=first(rt)
   ) %>% group_by(condition) %>%
   summarise(
-    refclicks=sum(clicked=="ref")/n()
+    refclicks=sum(clicked=="ref")/n(),
+    mean_rt=mean(rt,na.rm=T)
   )
 
 require(lme4)
@@ -84,7 +86,7 @@ summary(model_mouse)
 aggdat %>% mutate(
   CURRENT_BIN = time_s/0.02,
   fitted=fitted(model_mouse)
-) %>% make_tcplot_data(.,c("elog_bias","fitted"),"fluency") -> plotdat
+) %>% make_tcplotdata(.,c(elog_bias,fitted),sub,fluency) -> plotdat
 
 ggplot(plotdat,aes(x=time,col=fluency,fill=fluency))+
   geom_point(data=plotdat[!grepl("fitted",plotdat$AOI),],aes(y=mean_prop))+
