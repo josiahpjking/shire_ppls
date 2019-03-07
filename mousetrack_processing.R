@@ -348,7 +348,8 @@ ppt_info %>% filter(total_trials>=50) %>% mutate(
         hoverinfo="text"
         )
 
-
+dup_workers
+workers %>% filter(BATCH=="mtrack_loy 15") %>% pull(`WORKER ID`) %>% duplicated()
 
 tdat_binned %<>% filter(Condition!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%

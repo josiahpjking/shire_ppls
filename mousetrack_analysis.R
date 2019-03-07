@@ -5,20 +5,20 @@ ppt_info %>% filter(include_ppt=="valid") %>% select(duplicate2, bilingual) %>% 
 ######
 #PLOT
 ########
-tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid", duplicate2!="duplicate") %>%
+tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate2!="unknown") %>%
   mutate(CURRENT_BIN = time/20,
          referent=refprop,
          distractor=disprop) %>% 
-  make_tcplotdata(.,AOIs=c(referent,distractor),subj=Participant,Condition,bilingual) %>%
+  make_tcplotdata(.,AOIs=c(referent,distractor),subj=Participant,Condition,duplicate2) %>%
   mutate(
     Object = fct_recode(AOI,"Distractor"="disprop","Referent"="refprop")
   ) %>% 
-  tcplot(lty=Condition)+facet_wrap(~bilingual)+
+  tcplot(lty=Condition)+facet_wrap(~duplicate2)+
   ylab("proportion cumulative movement towards objects")
 
 #elog bias plot
 tdat_binned %>% 
-  filter(include_ppt=="valid",include_trial=="valid",duplicate2=="n-dup") %>% 
+  filter(include_ppt=="valid",include_trial=="valid",duplicate2=="duplicate") %>% 
   mutate(
     CURRENT_BIN=time/20,
     Relog = log(refprop + .5/ (1 - refprop + .5)),
