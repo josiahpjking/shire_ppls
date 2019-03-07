@@ -1,15 +1,19 @@
 #source("mousetrack_processing.R")
 
+ppt_info %>% filter(include_ppt=="valid") %>% select(duplicate2, bilingual) %>% table
+
 ######
 #PLOT
 ########
-tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate2!="duplicate") %>%
-  mutate(CURRENT_BIN = time/20) %>% 
-  make_tcplotdata(.,AOIs=c(refprop,disprop),subj=Participant,Condition,duplicate2) %>%
+tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid", duplicate2!="duplicate") %>%
+  mutate(CURRENT_BIN = time/20,
+         referent=refprop,
+         distractor=disprop) %>% 
+  make_tcplotdata(.,AOIs=c(referent,distractor),subj=Participant,Condition,bilingual) %>%
   mutate(
     Object = fct_recode(AOI,"Distractor"="disprop","Referent"="refprop")
   ) %>% 
-  tcplot(lty=Condition)+facet_wrap(~duplicate2)+
+  tcplot(lty=Condition)+facet_wrap(~bilingual)+
   ylab("proportion cumulative movement towards objects")
 
 #elog bias plot

@@ -285,6 +285,8 @@ ppt_info %<>% mutate(
                      ifelse(!is.na(mturk_id),"n-dup","unknown"))
   )
 
+early_dups <- dup_workers %>% filter(grepl("GREENBERG|TWAIN",comments)) %>% pull(mturk_id)
+
 ppt_info %>% group_by(mturk_id) %>% 
   summarise(
     nppt_nums = n(),
@@ -294,10 +296,13 @@ ppt_info %>% group_by(mturk_id) %>%
     ppt_valid = toString(include_ppt),
     ppt_first = min(which(total_trials==60)),
     valid_nums = Participant[ppt_first]
-  ) %>% filter(!is.na(mturk_id),nppt_nums>1) %>% pull(valid_nums) -> first_of_dups
+  ) %>% filter(!is.na(mturk_id),nppt_nums>1) %>%
+  mutate(
+    valid_nums = ifelse(mturk_id %in% early_dups,NA,valid_nums)
+  ) -> first_of_dups
 
 ppt_info %>% mutate(
-  duplicate2 = ifelse(duplicate=="duplicate" & Participant %in% first_of_dups,"n-dup",duplicate),
+  duplicate2 = ifelse(duplicate=="duplicate" & Participant %in% first_of_dups$valid_nums,"n-dup",duplicate),
   dup_incl = paste0(include_ppt," : ",duplicate2)
 ) -> ppt_info
 
@@ -319,23 +324,25 @@ ppt_info %>% select(include_ppt) %>% table
 
 require(plotly)
 require(RColorBrewer)
-ppt_info %>% mutate(
-  text = paste(mturk_id,paste0("<b>include:</b>",include_ppt),
-               paste0("<b>duplicate:</b>",duplicate2),
-               paste0("<b>p_earlyclick:</b>",p_clickprenoun_nonempty,"%"),
-               paste0("<b>av clicktime:</b>",avg_clicktime),
-               paste0("<b>total trials:</b>",total_trials),
-               paste0("<b>non empty crit trials:</b>",crit_nonempty_trials),
-               paste0("<b>att check:</b>",att_check),
-               paste0("<b>time taken:</b>",time_taken),
-               sep="<br>")
+ppt_info %>% filter(total_trials>=50) %>% mutate(
+  text = paste(
+    Participant,
+    mturk_id,paste0("<b>include:</b>",include_ppt),
+    paste0("<b>duplicate:</b>",duplicate2),
+    paste0("<b>p_earlyclick:</b>",p_clickprenoun_nonempty,"%"),
+    paste0("<b>av clicktime:</b>",avg_clicktime),
+    paste0("<b>total trials:</b>",total_trials),
+    paste0("<b>non empty crit trials:</b>",crit_nonempty_trials),
+    paste0("<b>att check:</b>",att_check),
+    paste0("<b>time taken:</b>",time_taken),
+    sep="<br>")
 ) %>% plot_ly(.,
         x=~last_time,
         y=~Participant,
         type="scatter",
         mode="markers",
         color=~factor(dup_incl),
-        colors=brewer.pal(4,"Dark2")[c(4,1)],
+        colors=brewer.pal(7,"Set1"),
         marker = list(size = 10),
         text=~text,
         hoverinfo="text"
@@ -351,5 +358,4 @@ tdat %<>% filter(Condition!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%
   #filter(include_ppt=="valid", include_trial=="valid")
 
-ppt_info %>% filter(include_ppt=="valid") %>% select(duplicate2) %>% table
 
