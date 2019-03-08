@@ -1,11 +1,19 @@
 #source("mousetrack_processing.R")
 
-ppt_info %>% filter(include_ppt=="valid") %>% select(duplicate2, bilingual) %>% table
+ppt_info %>% filter(include_ppt=="valid") %>%
+  mutate(
+    bilingual2 = fct_recode(factor(bilingual), 
+                            "Monolingual"="No",
+                            "Monolingual"="No - Only English",
+                            "Bilingual"="Yes - English and some other language",
+                            "Non-native"="Yes - Some other language and not English",
+                            "maybe"="Yes")
+  ) %>% select(duplicate2, bilingual2) %>% table
 
 ######
 #PLOT
 ########
-tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate2!="unknown") %>%
+tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate2=="n-dup",grepl("No",bilingual)) %>%
   mutate(CURRENT_BIN = time/20,
          referent=refprop,
          distractor=disprop) %>% 
@@ -18,7 +26,7 @@ tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate2!="
 
 #elog bias plot
 tdat_binned %>% 
-  filter(include_ppt=="valid",include_trial=="valid",duplicate2=="duplicate") %>% 
+  filter(include_ppt=="valid",include_trial=="valid",duplicate2=="n-dup",grepl("No",bilingual)) %>% 
   mutate(
     CURRENT_BIN=time/20,
     Relog = log(refprop + .5/ (1 - refprop + .5)),
@@ -26,7 +34,7 @@ tdat_binned %>%
     elog_bias = Relog - Delog
   ) %>% make_tcplotdata(.,elog_bias,Participant,Condition) %>% 
   tcplot(lty=Condition)+ylim(-.5,1.5)+xlim(0,800)+
-  stat_smooth(method=lm,col="black",fill="grey30")+
+  #stat_smooth(method=lm,col="black",fill="grey30")+
   NULL
 
 
