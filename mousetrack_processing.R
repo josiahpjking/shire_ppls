@@ -260,7 +260,8 @@ qdata %>% filter(grepl("language",Question)) %>% rename(
 
 
 workers<-read_tsv("mturkers.csv") %>% filter(!is.na(`WORKER ID`)) %>% mutate(mturk_id=substring(`WORKER ID`,3))
-workers %>% group_by(mturk_id) %>%
+workers  %>%
+  group_by(mturk_id) %>%
    summarise(
      nr_attempts = n(),
      batches=gsub("mtrack_loy ","",toString(BATCH)),
@@ -270,9 +271,7 @@ workers %>% group_by(mturk_id) %>%
 #   duplicate=duplicated(`WORKER ID`),
 #   mturk_id=substring(`WORKER ID`,3)
 # ) %>% filter(duplicate==TRUE,!is.na(mturk_id)) -> dup_workers
-
 workers %>% filter(BATCH=="mtrack_loy 15") %>% pull(mturk_id) %>% duplicated()
-workers$mturk_id[workers$BATCH=="mtrack_loy 15" & !(workers$mturk_id %in% ppt_info$mturk_id)]
 
 
 #########
@@ -318,8 +317,8 @@ ppt_trial_info %<>% mutate(
                            audio_played==1, "valid","invalid")
 )
 
-#ggplot(ppt_info, aes(y=factor(Participant),col=factor(att_check)))+
-#  geom_point(aes(x=last_time,group=Participant))+facet_wrap(~include_ppt)
+ggplot(ppt_info, aes(y=factor(Participant),col=factor(att_check)))+
+  geom_point(aes(x=last_time,group=Participant))+facet_wrap(~include_ppt)
 
 ppt_info %>% select(include_ppt) %>% table
 
