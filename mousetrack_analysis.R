@@ -13,7 +13,7 @@ ppt_info %>% filter(include_ppt=="valid") %>%
 ######
 #PLOT
 ########
-tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",duplicate2=="n-dup",grepl("No",bilingual)) %>%
+tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",grepl("No",bilingual)) %>%
   mutate(CURRENT_BIN = time/20,
          referent=refprop,
          distractor=disprop) %>% 
@@ -34,7 +34,7 @@ tdat_binned %>%
     elog_bias = Relog - Delog
   ) %>% make_tcplotdata(.,elog_bias,Participant,Condition) %>% 
   tcplot(lty=Condition)+ylim(-.5,1.5)+xlim(0,800)+
-  #stat_smooth(method=lm,col="black",fill="grey30")+
+  stat_smooth(method=lm,col="black",fill="grey30")+
   NULL
 
 
@@ -56,27 +56,36 @@ tdat %>% group_by(Participant, Trial) %>%
   )
 
 require(lme4)
-object_clicks %<>% filter(clicked!="none",rt>=200)
+left_join(object_clicks,ppt_info) %>% left_join(.,ppt_trial_info) %>%
+  filter(clicked!="none",
+         rt>=200,
+         fluency!="Filler",
+         include_ppt=="valid",
+         duplicate2=="n-dup"
+         ) %>% ungroup -> object_clicks
+droplevels(object_clicks) -> object_clicks
 object_clicks$fluency<-relevel(object_clicks$fluency,ref="Fluent")
 contrasts(object_clicks$fluency)<-c(-.5,.5)
 contrasts(object_clicks$clicked)
+object_clicks %>% select(fluency,clicked) %>% table %>% print %>% prop.table(.,margin=1)
 
 OC_model <- glmer(clicked~fluency+(1+fluency|Participant)+(1+fluency|Trial),object_clicks, family="binomial")
-
-
+summary(OC_model)
 
 
 ########
 #MODEL
 ########
-model.data <- tdat_binned %>% mutate(
-  time_s = time/1000,
-  sub = Participant,
-  ref = Trial,
-  fluency = Condition,
-  Cref = refprop,
-  Cdis = disprop
-) %>% filter(time_s<=0.8)
+model.data <- tdat_binned %>%
+  filter(include_ppt=="valid",include_trial=="valid",grepl("No",bilingual)) %>%
+    mutate(
+      time_s = time/1000,
+      sub = Participant,
+      ref = Trial,
+      fluency = Condition,
+      Cref = refprop,
+      Cdis = disprop
+    ) %>% filter(time_s<=0.8)
 
 aggdat = with(model.data, aggregate(Cref~time_s*fluency*sub*ref, FUN=sum, na.rm=T))
 aggdat$Cdis <- with(model.data, aggregate(Cdis~time_s*fluency*sub*ref, FUN=sum, na.rm=T))[,5]
@@ -92,7 +101,7 @@ aggdat <- aggdat %>% mutate(
 aggdat$fluency<-relevel(aggdat$fluency,ref="Fluent")
 #contrasts(aggdat$fluency)<-c(-.5,.5)
 require(lme4)
-model_mouse<-lmer(elog_bias~fluency*time_s+(1+fluency+time_s|sub)+(1+fluency+time_s|ref),aggdat)
+model_mouse<-lmer(elog_bias~fluency*time_s+(1+fluency+time_s|sub)+(1|ref),aggdat)
 summary(model_mouse)
 
 aggdat %>% mutate(

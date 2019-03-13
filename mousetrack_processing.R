@@ -69,7 +69,7 @@ tdat <- rawdata %>%
     Y=Y-350,
     item=Trial,
     refpos=substring(Condition,nchar(Condition)),
-    Condition=substring(Condition,4,nchar(Condition)-1)
+    Condition=gsub('[[:digit:]]+|_', '', substring(Condition,1,nchar(Condition)-1))
   ) %>% print()
 
 ########
@@ -317,8 +317,8 @@ ppt_trial_info %<>% mutate(
                            audio_played==1, "valid","invalid")
 )
 
-ggplot(ppt_info, aes(y=factor(Participant),col=factor(att_check)))+
-  geom_point(aes(x=last_time,group=Participant))+facet_wrap(~include_ppt)
+#ggplot(ppt_info, aes(y=factor(Participant),col=factor(att_check)))+
+#  geom_point(aes(x=last_time,group=Participant))+facet_wrap(~include_ppt)
 
 ppt_info %>% select(include_ppt) %>% table
 
