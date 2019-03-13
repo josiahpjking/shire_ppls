@@ -271,7 +271,7 @@ workers  %>%
 #   duplicate=duplicated(`WORKER ID`),
 #   mturk_id=substring(`WORKER ID`,3)
 # ) %>% filter(duplicate==TRUE,!is.na(mturk_id)) -> dup_workers
-workers %>% filter(BATCH=="mtrack_loy 15") %>% pull(mturk_id) %>% duplicated()
+workers %>% filter(BATCH=="mtrack_loy 15") %>% pull(mturk_id) %>% duplicated() %>% any
 
 
 #########
@@ -295,7 +295,7 @@ ppt_info %>% group_by(mturk_id) %>%
     pptnums_str = toString(Participant),
     ppt_trials = toString(total_trials),
     ppt_valid = toString(include_ppt),
-    ppt_first = min(which(total_trials==60)),
+    ppt_first = min(which(total_trials>=30)),
     valid_nums = Participant[ppt_first]
   ) %>% filter(!is.na(mturk_id),nppt_nums>1) %>%
   mutate(
@@ -304,7 +304,9 @@ ppt_info %>% group_by(mturk_id) %>%
 
 ppt_info %>% mutate(
   duplicate2 = ifelse(duplicate=="duplicate" & Participant %in% first_of_dups$valid_nums,"n-dup",duplicate),
-  dup_incl = paste0(include_ppt," : ",duplicate2)
+  dup_incl = paste0(include_ppt," : ",duplicate2),
+  submitted = ifelse(is.na(mturk_id),NA,
+                     ifelse(mturk_id %in% workers$mturk_id,"submitted","not submitted"))
 ) -> ppt_info
 
 #take the first ppt num, unless we've got something like ppts 92,93. need conditional..
@@ -329,6 +331,7 @@ ppt_info %>% filter(total_trials>=50) %>% mutate(
   text = paste(
     Participant,
     mturk_id,paste0("<b>include:</b>",include_ppt),
+    paste0("<b>submitted:</b>",submitted),
     paste0("<b>duplicate:</b>",duplicate2),
     paste0("<b>p_earlyclick:</b>",p_clickprenoun_nonempty,"%"),
     paste0("<b>av clicktime:</b>",avg_clicktime),
