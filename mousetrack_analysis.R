@@ -1,3 +1,4 @@
+require(lme4)
 #source("mousetrack_processing.R")
 
 ppt_info %>% filter(include_ppt=="valid") %>%
@@ -44,7 +45,8 @@ tdat_binned %>%
 #  transition_time(Elapsed) +
 #  ease_aes('linear') -> p
 
-tdat %>% group_by(Participant, Trial) %>%
+tdat %>% filter(include_ppt=="valid",include_trial=="valid",duplicate2=="n-dup",grepl("No",bilingual)) %>%
+  group_by(Participant, Trial) %>%
   summarise(
     clicked=first(clicked),
     condition=first(condition),
@@ -55,7 +57,7 @@ tdat %>% group_by(Participant, Trial) %>%
     mean_rt=mean(rt,na.rm=T)
   )
 
-require(lme4)
+
 left_join(object_clicks,ppt_info) %>% left_join(.,ppt_trial_info) %>%
   filter(clicked!="none",
          rt>=200,
@@ -77,7 +79,7 @@ summary(OC_model)
 #MODEL
 ########
 model.data <- tdat_binned %>%
-  filter(include_ppt=="valid",include_trial=="valid",grepl("No",bilingual)) %>%
+  filter(include_ppt=="valid",include_trial=="valid",duplicate2=="n-dup",grepl("No",bilingual)) %>%
     mutate(
       time_s = time/1000,
       sub = Participant,
@@ -96,12 +98,13 @@ aggdat <- aggdat %>% mutate(
   elog_bias = Relog - Delog,
   C_difference = abs(Cref - Cdis),
   wts =  1/(C_difference + .5) + 1/(N - C_difference + .5),
-  fluency = factor(fluency)
+  fluency = factor(fluency),
+  time_z = scale(time_s)[,1]
 )
 aggdat$fluency<-relevel(aggdat$fluency,ref="Fluent")
-#contrasts(aggdat$fluency)<-c(-.5,.5)
-require(lme4)
-model_mouse<-lmer(elog_bias~fluency*time_s+(1+fluency+time_s|sub)+(1|ref),aggdat)
+contrasts(aggdat$fluency)[,1]<-c(-.5,.5)
+
+model_mouse<-lmer(elog_bias~fluency*time_s+(1+fluency*time_s|sub)+(1+time_s|ref),aggdat)
 summary(model_mouse)
 
 aggdat %>% mutate(
