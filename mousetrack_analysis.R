@@ -1,28 +1,34 @@
 require(lme4)
 #source("mousetrack_processing.R")
 
-ppt_info %>% filter(include_ppt=="valid") %>%
-  mutate(
-    bilingual2 = fct_recode(factor(bilingual), 
-                            "Monolingual"="No",
-                            "Monolingual"="No - Only English",
-                            "Bilingual"="Yes - English and some other language",
-                            "Non-native"="Yes - Some other language and not English",
-                            "maybe"="Yes")
-  ) %>% select(duplicate2, bilingual2) %>% table
+ppt_info %>% filter(include_ppt=="valid") %>% 
+  select(duplicate2, bilingual2) %>% table
+
+#how long did people take?
+ppt_info %>% filter(include_ppt=="valid", duplicate2=="n-dup") %>%
+  pull(time_taken) %>% as.numeric() %>% hist
+
+#what hours do mturkers work? :)
+hist(lubridate::hour(ppt_info$first_time1))
+
+
 
 ######
 #PLOT
 ########
-tdat_binned %>% filter(include_ppt=="valid",include_trial=="valid",grepl("No",bilingual)) %>%
+tdat_binned %>% 
+  filter(include_ppt=="valid",
+         include_trial=="valid",
+         grepl("No",bilingual),
+         duplicate2=="n-dup") %>%
   mutate(CURRENT_BIN = time/20,
          referent=refprop,
          distractor=disprop) %>% 
-  make_tcplotdata(.,AOIs=c(referent,distractor),subj=Participant,Condition,duplicate2) %>%
+  make_tcplotdata(.,AOIs=c(referent,distractor),subj=Participant,Condition) %>%
   mutate(
     Object = fct_recode(AOI,"Distractor"="disprop","Referent"="refprop")
   ) %>% 
-  tcplot(lty=Condition)+facet_wrap(~duplicate2)+
+  tcplot(lty=Condition)+
   ylab("proportion cumulative movement towards objects")
 
 #elog bias plot
@@ -58,10 +64,9 @@ tdat %>% filter(include_ppt=="valid",include_trial=="valid",duplicate2=="n-dup",
   )
 
 
-left_join(object_clicks,ppt_info) %>% left_join(.,ppt_trial_info) %>%
+object_clicks %>%
   filter(clicked!="none",
          rt>=200,
-         fluency!="Filler",
          include_ppt=="valid",
          duplicate2=="n-dup"
          ) %>% ungroup -> object_clicks
@@ -104,7 +109,7 @@ aggdat <- aggdat %>% mutate(
 aggdat$fluency<-relevel(aggdat$fluency,ref="Fluent")
 contrasts(aggdat$fluency)[,1]<-c(-.5,.5)
 
-model_mouse<-lmer(elog_bias~fluency*time_s+(1+fluency*time_s|sub)+(1+time_s|ref),aggdat)
+model_mouse<-lmer(elog_bias~fluency*time_z+(1+fluency*time_z|sub)+(1+time_z|ref),aggdat)
 summary(model_mouse)
 
 aggdat %>% mutate(
@@ -114,7 +119,7 @@ aggdat %>% mutate(
 
 ggplot(plotdat,aes(x=time,col=fluency,fill=fluency))+
   geom_point(data=plotdat[!grepl("fitted",plotdat$AOI),],aes(y=mean_prop))+
-  geom_ribbon(data=plotdat[!grepl("fitted",plotdat$AOI),],aes(ymin=low,ymax=up),col=NA,alpha=0.2)+
+  geom_errorbar(data=plotdat[!grepl("fitted",plotdat$AOI),],aes(ymin=low,ymax=up),alpha=0.7)+
   geom_line(data=plotdat[grepl("fitted",plotdat$AOI),],aes(y=mean_prop))+
   scale_colour_manual(values=c("#2171B5","#31A354"))+
   scale_fill_manual(values=c("#2171B5","#31A354"))+

@@ -55,8 +55,9 @@ rawdata %>% group_by(Participant, Trial) %>%
                                        ifelse(grepl("right",clickedLR),"R"))))
   ) %>% group_by(Participant) %>%
   summarise(
-    Lside_clicks = sum(clicked_pos=="L")/n()
-  ) %>% select(Participant, Lside_clicks) %>% print()
+    Lside_clicks = sum(clicked_pos=="L")/n(),
+    Rside_clicks = sum(clicked_pos=="R")/n()
+  ) %>% select(Participant, Lside_clicks,Rside_clicks) %>% print() -> side_clicks
 
 
 ####
@@ -254,12 +255,24 @@ qdata %>% filter(grepl("MTurk",Question)) %>% rename(
     duplicate = duplicated(mturk_id)
   ) %>% print -> ppt_info
 qdata %>% filter(grepl("language",Question)) %>% rename(
-  bilingual = `Answers...`
-) %>% group_by(Participant) %>%
-  summarise(bilingual=first(bilingual)) %>% right_join(.,ppt_info) %>% print -> ppt_info
+  bilingual = `Answers...`) %>%
+  mutate(bilingual2 = fct_recode(factor(bilingual), 
+                          "Monolingual"="No",
+                          "Monolingual"="No - Only English",
+                          "Bilingual"="Yes - English and some other language",
+                          "Non-native"="Yes - Some other language and not English",
+                          "maybe"="Yes")
+  ) %>% group_by(Participant) %>%
+    summarise(bilingual=first(bilingual),
+            bilingual2=first(bilingual2)) %>% 
+  right_join(.,ppt_info) %>% 
+print -> ppt_info
 
+#join the side clicks from beginning
+left_join(ppt_info, side_clicks) -> ppt_info
 
 workers<-read_tsv("mturkers.csv") %>% filter(!is.na(`WORKER ID`)) %>% mutate(mturk_id=substring(`WORKER ID`,3))
+
 workers  %>%
   group_by(mturk_id) %>%
    summarise(
@@ -281,6 +294,7 @@ ppt_info %<>% mutate(
                          crit_nonempty_trials>=10 & 
                          att_check>=.5 &
                          p_clickprenoun_nonempty<=5 &
+                         Lside_clicks>=.1 & Lside_clicks<=.9 &
                          avg_clicktime>=200,"valid","invalid"),
   duplicate = ifelse(mturk_id %in% dup_workers$mturk_id, "duplicate",
                      ifelse(!is.na(mturk_id),"n-dup","unknown"))
@@ -334,6 +348,7 @@ ppt_info %>% filter(total_trials>=50) %>% mutate(
     paste0("<b>submitted:</b>",submitted),
     paste0("<b>duplicate:</b>",duplicate2),
     paste0("<b>p_earlyclick:</b>",p_clickprenoun_nonempty,"%"),
+    paste0("<b>p_leftsideclicks:</b>",Lside_clicks),
     paste0("<b>av clicktime:</b>",avg_clicktime),
     paste0("<b>total trials:</b>",total_trials),
     paste0("<b>non empty crit trials:</b>",crit_nonempty_trials),
@@ -361,4 +376,5 @@ tdat %<>% filter(Condition!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) #%>%
   #filter(include_ppt=="valid", include_trial=="valid")
 
-
+object_clicks %>% filter(fluency!="Filler") %>%
+  left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) -> object_clicks
