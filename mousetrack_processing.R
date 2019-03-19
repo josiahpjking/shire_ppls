@@ -341,7 +341,7 @@ ppt_info %>% select(include_ppt) %>% table
 
 require(plotly)
 require(RColorBrewer)
-ppt_info %>% filter(total_trials>=50) %>% mutate(
+ppt_info %>% mutate(
   text = paste(
     Participant,
     mturk_id,paste0("<b>include:</b>",include_ppt),
