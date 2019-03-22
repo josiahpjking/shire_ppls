@@ -74,6 +74,7 @@ droplevels(object_clicks) -> object_clicks
 object_clicks$fluency<-relevel(object_clicks$fluency,ref="Fluent")
 contrasts(object_clicks$fluency)<-c(-.5,.5)
 contrasts(object_clicks$clicked)
+object_clicks %>% select(clicked) %>% table %>% print %>% prop.table()
 object_clicks %>% select(fluency,clicked) %>% table %>% print %>% prop.table(.,margin=1)
 
 OC_model <- glmer(clicked~fluency+(1+fluency|Participant)+(1+fluency|Trial),object_clicks, family="binomial")

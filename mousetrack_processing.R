@@ -23,6 +23,8 @@ rawdata %>% mutate(
    audio = ifelse(is.na(audio),OS,audio)
 ) -> rawdata
 
+#fix for a participant who it didn't work for
+rawdata %>% filter(Participant!=251) -> rawdata
 
 
 #attention checks
@@ -293,7 +295,7 @@ ppt_info %<>% mutate(
   include_ppt = ifelse(total_trials>=55 & 
                          crit_nonempty_trials>=10 & 
                          att_check>=.5 &
-                         p_clickprenoun_nonempty<=5 &
+                         p_clickprenoun_nonempty<=10 &
                          Lside_clicks>=.1 & Lside_clicks<=.9 &
                          avg_clicktime>=200,"valid","invalid"),
   duplicate = ifelse(mturk_id %in% dup_workers$mturk_id, "duplicate",
@@ -378,3 +380,4 @@ tdat %<>% filter(Condition!="Filler") %>%
 
 object_clicks %>% filter(fluency!="Filler") %>%
   left_join(.,ppt_info) %>% left_join(.,ppt_trial_info) -> object_clicks
+
