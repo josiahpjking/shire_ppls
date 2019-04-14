@@ -6,11 +6,11 @@ ppt_info %>% filter(include_ppt=="valid") %>%
 
 #how long did people take?
 ppt_info %>% filter(include_ppt=="valid", duplicate2=="n-dup") %>%
-  pull(time_taken) %>% as.numeric() %>% hist
+  pull(time_taken) %>% as.numeric() %>% summary
 
 #what hours do mturkers work? :)
-hist(lubridate::hour(ppt_info$first_time1))
-
+ppt_info$hourstart = lubridate::hour(ppt_info$first_time1)
+ggplot(ppt_info,aes(x=hourstart))+geom_histogram(bins=24) -> timeofday
 
 
 ######
