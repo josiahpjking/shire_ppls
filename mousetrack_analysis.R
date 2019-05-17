@@ -131,3 +131,55 @@ ggplot(plotdat,aes(x=time,col=fluency,fill=fluency))+
   theme(text = element_text(size=16),legend.position = "bottom")+
   ggtitle("Mouse movements")+
   NULL 
+
+#####
+#GAMMs
+#####
+require(mgcv)
+require(itsadug)
+
+tdat_binned %>% 
+  filter(include_ppt=="valid",include_trial=="valid",duplicate2=="n-dup",grepl("No",bilingual)) %>% 
+  mutate(
+    CURRENT_BIN=time/20,
+    Time=time,
+    Relog = log(refprop + .5/ (1 - refprop + .5)),
+    Delog = log(disprop + .5/ (1 - disprop + .5)),
+    elog_bias = Relog - Delog,
+    sub = Participant,
+    ref = Trial,
+    Condition=factor(Condition)
+  ) %>% filter(Time <= 2000) %>% ungroup-> dat
+dat$Condition<-as.ordered(dat$Condition)
+contrasts(dat$Condition)<-"contr.treatment"
+
+
+m1<-bam(cumulative_distance~Condition+s(Time)+s(Time,by=Condition)+
+          s(Time,sub,by=Condition,bs="fs",m=1)+
+          s(Time,sub,by=Condition,bs="fs",m=1),
+        data=dat)
+plot_smooth(m1,view="Time", plot_all="Condition", rug=FALSE,rm.ranef=TRUE)
+plot_diff(m1,"Time",comp=list(Condition=c("Fluent","Disfluent")),rm.ranef=TRUE)
+
+m2<-bam(elog_bias~Condition+s(Time)+s(Time,by=Condition)+
+          s(Time,sub,by=Condition,bs="fs",m=1)+
+          s(Time,sub,by=Condition,bs="fs",m=1),
+        data=dat)
+plot_smooth(m2,view="Time", plot_all="Condition", rug=FALSE,rm.ranef=TRUE)
+plot_diff(m2,"Time",comp=list(Condition=c("Fluent","Disfluent")),rm.ranef=TRUE)
+
+acf_resid(m2)
+rho_val=acf_resid(m2)[2]
+dat<-start_event(as.data.frame(dat),"Time",event=c("sub","ref"))
+fmod<-update(m2,AR.start = dat$start.event,rho=rho_val)
+
+plot_smooth(fmod,view="Time", plot_all="Condition", rug=FALSE,rm.ranef=TRUE)
+plot_diff(fmod,"Time",comp=list(Condition=c("Fluent","Disfluent")),rm.ranef=TRUE)
+
+summary(fmod)
+
+
+
+
+
+
