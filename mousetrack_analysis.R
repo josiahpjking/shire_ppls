@@ -11,8 +11,8 @@ ppt_info %>% filter(include_ppt=="valid", duplicate2=="n-dup") %>%
 #what hours do mturkers work? :)
 ppt_info$hourstart = lubridate::hour(ppt_info$first_time1)
 ggplot(ppt_info,aes(x=hourstart))+geom_histogram(bins=24) -> timeofday
-
-
+timeofday
+source("~/Desktop/git_repositories/jkr/R/BSmake_tcplotdata.R")
 ######
 #PLOT
 ########
@@ -24,7 +24,7 @@ tdat_binned %>%
   mutate(CURRENT_BIN = time/20,
          referent=refprop,
          distractor=disprop) %>% 
-  make_tcplotdata(.,AOIs=c(referent,distractor),subj=Participant,Condition) %>%
+  BSmake_tcplotdata(.,AOIs=c(referent,distractor),subj=Participant,Condition,n=1000) %>%
   mutate(
     Object = fct_recode(AOI,"Distractor"="disprop","Referent"="refprop")
   ) %>% 
@@ -92,21 +92,17 @@ model.data <- tdat_binned %>%
       ref = Trial,
       fluency = Condition,
       Cref = refprop,
-      Cdis = disprop
-    ) %>% filter(time_s<=0.8)
+      Cdis = disprop,
+      N=1,
+      Relog = log(Cref + .5/ (N - Cref + .5)),
+      Delog = log(Cdis + .5/ (N - Cdis + .5)),
+      elog_bias = Relog - Delog,
+      C_difference = abs(Cref - Cdis),
+      wts =  1/(C_difference + .5) + 1/(N - C_difference + .5),
+      fluency = factor(fluency),
+      time_z = scale(time_s)[,1]
+    ) %>% filter(time_s<=0.8) %>% ungroup -> aggdat
 
-aggdat = with(model.data, aggregate(Cref~time_s*fluency*sub*ref, FUN=sum, na.rm=T))
-aggdat$Cdis <- with(model.data, aggregate(Cdis~time_s*fluency*sub*ref, FUN=sum, na.rm=T))[,5]
-aggdat$N <- 1
-aggdat <- aggdat %>% mutate(
-  Relog = log(Cref + .5/ (N - Cref + .5)),
-  Delog = log(Cdis + .5/ (N - Cdis + .5)),
-  elog_bias = Relog - Delog,
-  C_difference = abs(Cref - Cdis),
-  wts =  1/(C_difference + .5) + 1/(N - C_difference + .5),
-  fluency = factor(fluency),
-  time_z = scale(time_s)[,1]
-)
 aggdat$fluency<-relevel(aggdat$fluency,ref="Fluent")
 contrasts(aggdat$fluency)[,1]<-c(-.5,.5)
 
