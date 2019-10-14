@@ -1,0 +1,90 @@
+\documentclass[a4paper,man,natbib]{apa6}
+%\usepackage[square]{natbib}
+\usepackage{microtype}
+\usepackage{mathtools} % needed
+\usepackage{hyperref}
+\usepackage{tabularx}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\usepackage[normalem]{ulem}
+\hypersetup{hidelinks=True}
+\usepackage{lingex} % < MC's numbering
+
+\usepackage{afterpage}
+
+\newcommand\blankpage{%
+    \null
+    \thispagestyle{empty}%
+    \addtocounter{page}{-1}%
+    \newpage}
+
+\usepackage[modulo,displaymath,pagewise]{lineno}
+
+\newcommand*{\smex}[1]{\textit{#1}} % 'small example'
+\newcommand*{\spex}[1]{``{#1}''} % 'spoken example'
+\newcommand*{\term}[1]{\emph{#1}} % introducing a new term
+\newcommand*{\citegen}[1]{\citeauthor{#1}'s~(\citeyear{#1})}
+\newcommand*{\SE}{\mathit{SE}} % fix funny "SE" spacing
+\newcommand{\resultsLog}[3]{$\beta = #1$, $\textnormal{SE} = #2$, $p #3$}
+\newcommand{\resultsLM}[3]{$\beta = #1$, $\textnormal{SE} = #2$, $t #3$}
+
+\usepackage[obeyFinal,textsize=tiny,backgroundcolor=yellow!60,linecolor=black!60]{todonotes}
+\setlength{\marginparwidth}{2cm}
+\let\oldtodo\todo
+\renewcommand*{\todo}[1]{\oldtodo[fancyline]{#1}}
+
+
+
+\title{??}
+\author{HR; JK}
+\affiliation{}
+\ifapamodeman{\note{\begin{flushleft}%
+\url{}
+\end{flushleft}}}
+
+\shorttitle{mtracker}
+
+\abstract{}
+
+\begin{document}
+\maketitle
+\linenumbers
+\noindent
+
+
+
+\section*{Methods}
+Tracking how participants move a computer mouse is a relatively recent method in behavioural psychology. 
+By recording positions and trajectories of the cursor relative to specific responses on a screen, researchers study the influence of various experimental manipulations on the decisions which participants make during these experiments.
+One area in which mouse-tracking has gained attention is in the context of language research - recording mouse movements alongside the presentation of speech allows researchers to track the time-course of lexical activations during real-time comprehension.
+For example, \citet{Spivey?} tasked listeners with responding to spoken instructions such as \spex{Click the
+candle}, while viewing displays which depicted the target (candle) and a distractor. 
+Listeners’ mouse trajectories showed a marked attraction towards distractors which
+shared the same phonological onset with the target word (e.g. candy) compared to
+distractors which did not (e.g. pickle)
+
+%mouse vs eye
+\citet{Allopenna1998} - eyes phonological competition. 
+% problem 
+takes fundamentally categorical measurements (fixations of one object or another over time) and produces 'continuous' functions. Thus, it can only approximate continuous central tendencies of group data.
+
+This is because the pattern of fixations across all experimental trials
+could simply reflect a cumulation of discrete interpretations on individual trials,
+on which a listener either fixates the object
+\citep{Farmer2005}
+
+The output of this process is
+a continuous stream of motor measures that reflect the evolving mental trajec-
+tory, allowing the researcher to draw conclusions about the ongoing dynamics of
+comprehension
+
+
+
+
+\subsection*{Participants}
+
+\section*{Analysis}
+
+\section*{Results}
+
+\end{document}

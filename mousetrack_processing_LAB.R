@@ -6,6 +6,8 @@ source("functions/make_tcplotdata.R")
 source("functions/tcplot.R")
 source("functions/tcplot_nolines.R")
 mround<-function (x, base) {base * round(x/base)}
+if(exists("unnest_legacy")){unnest<-unnest_legacy} # finding the new (tidyr1.0) unnest() a bit slower, and more problematic. 
+
 #1024 * 700
 # group names = X_n where X is condition (fluency * ref pos) and n is sample size/4
 
@@ -202,7 +204,7 @@ tdat_binned %>%
   left_join(tdat_binned, .) %>% print() -> tdat_binned
 
 #replace the NAs created at time==0 with 0.
-tdat_binned %<>% mutate_at(vars(contains("dist")),list(~ifelse(time==0,0,.)))
+tdat_binned %<>% mutate_at(vars(contains("dist")),~ifelse(time==0,0,.))
 
 tdat_binned %<>%
   mutate(
@@ -283,7 +285,7 @@ ppt_info %<>% mutate(
 ppt_trial_info %<>% mutate(
   include_trial = ifelse(datapoints!=0 & 
                            clicked!="none" & 
-                           clicktime>=200 & 
+                           clicktime>=200 & !is.na(clicktime) &
                            audio_played==1, "valid","invalid")
 )
 

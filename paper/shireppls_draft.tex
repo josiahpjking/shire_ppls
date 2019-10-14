@@ -1,0 +1,124 @@
+\documentclass[a4paper,man,natbib]{apa6}
+%\usepackage[square]{natbib}
+\usepackage{microtype}
+\usepackage{mathtools} % needed
+\usepackage{hyperref}
+\usepackage{tabularx}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\usepackage[normalem]{ulem}
+\hypersetup{hidelinks=True}
+\usepackage{lingex} % < MC's numbering
+
+\usepackage{afterpage}
+
+\newcommand\blankpage{%
+    \null
+    \thispagestyle{empty}%
+    \addtocounter{page}{-1}%
+    \newpage}
+
+\usepackage[modulo,displaymath,pagewise]{lineno}
+
+\newcommand*{\smex}[1]{\textit{#1}} % 'small example'
+\newcommand*{\spex}[1]{``{#1}''} % 'spoken example'
+\newcommand*{\term}[1]{\emph{#1}} % introducing a new term
+\newcommand*{\citegen}[1]{\citeauthor{#1}'s~(\citeyear{#1})}
+\newcommand*{\SE}{\mathit{SE}} % fix funny "SE" spacing
+\newcommand{\resultsLog}[3]{$\beta = #1$, $\textnormal{SE} = #2$, $p #3$}
+\newcommand{\resultsLM}[3]{$\beta = #1$, $\textnormal{SE} = #2$, $t #3$}
+
+\usepackage[obeyFinal,textsize=tiny,backgroundcolor=yellow!60,linecolor=black!60]{todonotes}
+\setlength{\marginparwidth}{2cm}
+\let\oldtodo\todo
+\renewcommand*{\todo}[1]{\oldtodo[fancyline]{#1}}
+
+
+
+\title{??}
+\author{HR; JK}
+\affiliation{}
+\ifapamodeman{\note{\begin{flushleft}%
+\url{}
+\end{flushleft}}}
+
+\shorttitle{mtracker}
+
+\abstract{}
+
+\begin{document}
+\maketitle
+\linenumbers
+\noindent
+
+
+
+\section*{Methods}
+Tracking how participants move a computer mouse is a relatively recent method in behavioural psychology. 
+By recording positions and trajectories of the cursor relative to specific responses on a screen, researchers study the influence of various experimental manipulations on the decisions which participants make during these experiments.
+One area in which mouse-tracking has gained attention is in the context of language research - recording mouse movements alongside the presentation of speech allows researchers to track the time-course of lexical activations during real-time comprehension.
+For example, \citet{Spivey?} tasked listeners with responding to spoken instructions such as \spex{Click the
+candle}, while viewing displays which depicted the target (candle) and a distractor. 
+Listeners’ mouse trajectories showed a marked attraction towards distractors which
+shared the same phonological onset with the target word (e.g. candy) compared to
+distractors which did not (e.g. pickle)
+
+%mouse vs eye
+\citet{Allopenna1998} - eyes phonological competition. 
+% problem 
+takes fundamentally categorical measurements (fixations of one object or another over time) and produces 'continuous' functions. Thus, it can only approximate continuous central tendencies of group data.
+
+This is because the pattern of fixations across all experimental trials
+could simply reflect a cumulation of discrete interpretations on individual trials,
+on which a listener either fixates the object
+\citep{Farmer2005}
+
+The output of this process is
+a continuous stream of motor measures that reflect the evolving mental trajec-
+tory, allowing the researcher to draw conclusions about the ongoing dynamics of
+comprehension
+
+
+We conducted a replication of the disfluency-deception bias \citep[see]{Loy2017} using mouse-tracking software developed %insert Graham, and Hannah's funding etc.
+An open example of the experiment can be viewed at https://shire.ppls.ed.ac.uk/experiment/wKrEBWMCtF
+
+Data was collected from both an online cohort and an in-lab cohort. 
+This allows us to compare noisy web data with that collected in an controlled environment in which there is less (or no) variation in hardware, software, connection to the server, and practical considerations such as visual and audible distractions during the experiment.
+
+%By combining this with the original data from \citep{Loy2017}
+By combining data from the original experiment \cite{Loy2017}, and both sets of data in the current study, we present estimates with increased power... 
+
+
+\subsection*{Participants}
+
+Lab data
+28 participants
+22 monolingual
+
+Mturk data collection was more difficult (see figure X).%jk insert flowchart
+this was the first use of mtracking software "in the wild" and there were some initial teething problems, such as certain combinations of browsers and operating systems not collecting any data, or not providing accurate timestamps. 
+Fifty-three mturk IDs located in the UK submitted HITs for this initial phase, with 7 taking part multiple times and submitting multiple HITs (despite instruction not to do so).
+%this is from mturk info. batches <8 ("SALINGER") were before mturk id collection in mtrack software
+Once technical problems such as these were fixed the experiment was re-opened, with participation conditional upon a HIT approval rating of at least 1000, and payment conditional upon a) one HIT per mturk ID, and b) valid completion of the game. 
+This latter condition was implemented because in the initial phase it transpired that many participants were not completing the experiment correctly (i.e., were clicking an image before hearing the audio and quickly progressing through the trials). 
+
+160 further instances (after the initial testing phase) of the experiment were opened to mturkers in the UK. 
+Forty-eight instances belonged to mturk IDs who had taken part on a previous occasion (either in this set or during the initial testing phase set).
+These subsequent instances (48) were excluded.
+
+The remaining 112 instances belonged to 112 distinct mturk IDs, with each instance being the first time that mturk ID had opened the experiment. 
+Of these 112 mturk IDs, 82 were self-reported monolingual speakers of English, 67 of which met all of the following criteria for valid completion of the game: 
+\begin{itemize}
+\item completed upwards of 55 out of the 64 trials (60 plus 4 attention check trials)
+\item moved the mouse in at least 10 out of 20 critical trials
+\item gave a correct response to 2 out of the 4 attention check questions (see below)
+\item clicked the mouse after the onset of the referent-noun in at least 90\% of the trials they completed
+\item clicked the mouse on average at least 200~ms after the onset of the referent noun
+\item did not make 90\% or more of their mouse clicks on the same side of the screen
+\end{itemize}
+
+\section*{Analysis}
+
+\section*{Results}
+
+\end{document}
