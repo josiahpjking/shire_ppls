@@ -36,7 +36,7 @@
 
 
 \title{??}
-\author{HR; JK}
+\author{}
 \affiliation{}
 \ifapamodeman{\note{\begin{flushleft}%
 \url{}
@@ -52,16 +52,12 @@
 \noindent
 
 
-
-\section*{Methods}
-Tracking how participants move a computer mouse is a relatively recent method in behavioural psychology. 
+\section*{Intro}
+Tracking how participants move a computer mouse is a comparatively recent method in behavioural psychology. 
 By recording positions and trajectories of the cursor relative to specific responses on a screen, researchers study the influence of various experimental manipulations on the decisions which participants make during these experiments.
 One area in which mouse-tracking has gained attention is in the context of language research - recording mouse movements alongside the presentation of speech allows researchers to track the time-course of lexical activations during real-time comprehension.
-For example, \citet{Spivey?} tasked listeners with responding to spoken instructions such as \spex{Click the
-candle}, while viewing displays which depicted the target (candle) and a distractor. 
-Listeners’ mouse trajectories showed a marked attraction towards distractors which
-shared the same phonological onset with the target word (e.g. candy) compared to
-distractors which did not (e.g. pickle)
+For example, \citet{Spivey?} tasked listeners with responding to spoken instructions such as \spex{Click the candle}, while viewing displays which depicted the target (candle) and a distractor. 
+Listeners’ mouse trajectories showed a marked attraction towards distractors which shared the same phonological onset with the target word (e.g. candy) compared to distractors which did not (e.g. pickle)
 
 %mouse vs eye
 \citet{Allopenna1998} - eyes phonological competition. 
@@ -88,12 +84,60 @@ This allows us to compare noisy web data with that collected in an controlled en
 %By combining this with the original data from \citep{Loy2017}
 By combining data from the original experiment \cite{Loy2017}, and both sets of data in the current study, we present estimates with increased power... 
 
+The study presented here is aimed at validating mouse-tracking software which runs on a server at the University of Edinburgh, allowing the collection of data via online services such as Amazon-Turk. An example of the experiment can be found at: 
+https://shire.ppls.ed.ac.uk/experiment/wKrEBWMCtF
+
+
+\section*{Methods}
+
+\subsection*{materials}  
+
+Visual stimuli consisted of the same 120 line drawings from Snodgrass and Vanderwart that were used in Loy et al.’s study, with the same subset of 20 used in critical trials. 
+We used the same audio recordings from Loy et al. (Experiment 2) in which the speaker named an object as hiding the location of some treasure. As in Loy et al., the utterances were either fluent or contained a disfluency prior the critical noun:
+“the treasure is behind the/thee - uh - <referent>”
+
+\subsection*{procedure}
+
+Experiment is presented on a 1024x700 display. If the resolution of the monitor is greater than this then the display is centered and the surrounding area is black. The experiment does not run on devices with a lower resolution (e.g. mobile devices). As in the original study, images are centred vertically and positioned such that the center of the images are 15% inwards from either edge of the display. 
+
+Figure 1 shows the trial procedure.
+A central click box is presented upon which the participants must click (in doing so centering the cursor).
+After clicking on this box, the two objects (referent and distractor) appear.
+After 1000ms, the playback of the utterance begins. 
+The participant must then click on one of the objects on the screen, or else the trial will time out 5000ms after the recording ends. 
+Upon clicking an object (or timeout), the central clickbox is presented, signifying the beginning of the next trial.
+Prior to beginning the experiment, instructions (Figure 2) followed by a scoreboard (Figure 3) are presented on screen.
+
+
+\subsection*{differences}
+
+random allocation of trial order, pairings of referents/distractors, and left/right positioning of referent image, was not possible to encode on each run of the experiment. 
+in loy - left/right was sampled on each trial, pairings of ref/dist and trial order were randomly allocated on each run of experiment.  
+
+in the present study, relative on-screen positions (left/right) or referents/distractors were fully counterbalanced across items.
+20 critical items were counterbalanced across four lists in which 5 fluent target left, 5 disfluent target right, 5 fluent target right, 5 disfluent left. 
+these 4 lists were expanded to 44, each of which contained the 40 distractor referents, with randomly paired distractors, and randomly ordered. 
+
+Mouse position is sampled only when the mouse is clicked or when the cursor is in motion (i.e. at an event). 
+When the cursor is in motion, position is sampled at a rate of 62.5Hz, or every 16ms (Chrome on Linux with wired connection).
+
+unlike Loy, there were no practice trials.  
+
+In the original study, progression between trials required a central fixation point, and the cursor was hidden until utterance onset, at which point it was centered and made visible.
+In the present study, the cursor is always visible, and participants center it themselves in progressing between trials. 
+
+In the original paradigm, participants are shown a scoreboard at the onset of the experiment, and are told that they will collect points for correctly guessing the true location of the treasure. 25\% of filler trials presented participants with feedback stating that the trial was a “bonus round”, and they successfully located the treasure (regardless of which object they clicked).
+
+Using our software, it is not possible to give feedback on trials. 
+
+attention check trials  
+Instead, we include four “bonus rounds” interspersed randomly throughout the experiment, which serve as attention check trials, to ensure that participants are attending to the experiment and to the audio, and not simply clicking through whilst doing something else.  
+These bonus rounds are procedurally the same as experimental trials in that they are presented as two objects and along with a spoken utterance. 
+Each bonus round shows two further images from Snodgrass and Vanderwart (1980), one of which is an animal, and one of which is not. Participants hear an utterance (from a different speaker) saying “This is a bonus round! Simply click on the animal to score extra points!”. 
+Participants are informed in the instructions that bonus rounds are not lies. 
+
 
 \subsection*{Participants}
-
-Lab data
-28 participants
-22 monolingual
 
 Mturk data collection was more difficult (see figure X).%jk insert flowchart
 this was the first use of mtracking software "in the wild" and there were some initial teething problems, such as certain combinations of browsers and operating systems not collecting any data, or not providing accurate timestamps. 
@@ -107,7 +151,7 @@ Forty-eight instances belonged to mturk IDs who had taken part on a previous occ
 These subsequent instances (48) were excluded.
 
 The remaining 112 instances belonged to 112 distinct mturk IDs, with each instance being the first time that mturk ID had opened the experiment. 
-Of these 112 mturk IDs, 82 were self-reported monolingual speakers of English, 67 of which met all of the following criteria for valid completion of the game: 
+Of these 112 mturk IDs, 82 were self-reported monolingual speakers of English, 67 of which met all of the following criteria for valid completion of the game:  
 \begin{itemize}
 \item completed upwards of 55 out of the 64 trials (60 plus 4 attention check trials)
 \item moved the mouse in at least 10 out of 20 critical trials
@@ -116,6 +160,10 @@ Of these 112 mturk IDs, 82 were self-reported monolingual speakers of English, 6
 \item clicked the mouse on average at least 200~ms after the onset of the referent noun
 \item did not make 90\% or more of their mouse clicks on the same side of the screen
 \end{itemize}
+
+Lab data
+28 participants
+22 monolingual
 
 \section*{Analysis}
 
